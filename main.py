@@ -168,7 +168,12 @@ class VeilleTechOrchestrator:
             # Step 6: Analyze and group content
             self.error_handler.log_info("Analyzing and grouping articles...", "ORCHESTRATOR")
             content_analyzer = ContentAnalyzer()
-            analysis_result = content_analyzer.analyze_and_group(articles)
+            language_preference = self.config_manager.get_language_preference()
+            self.error_handler.log_info(
+                f"Translating articles to {language_preference}",
+                "ORCHESTRATOR",
+            )
+            analysis_result = content_analyzer.analyze_and_group(articles, target_language=language_preference)
 
             if analysis_result["status"] != "success":
                 return self._handle_fatal_error("CONTENT_ANALYZER", analysis_result["message"])

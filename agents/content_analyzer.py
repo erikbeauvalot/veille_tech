@@ -22,20 +22,23 @@ class ContentAnalyzer:
             # If API key not set, translator will be None
             self.translator = None
 
-    def analyze_and_group(self, articles: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def analyze_and_group(
+        self, articles: List[Dict[str, Any]], target_language: str = "French"
+    ) -> Dict[str, Any]:
         """
         Analyze articles and group by category.
 
         Args:
             articles: List of articles from RSS Fetcher
+            target_language: Target language for translation (default: French)
 
         Returns:
             Dict with grouped articles and analysis results
         """
         try:
-            # Translate article descriptions to French if translator is available
+            # Translate article descriptions if translator is available
             if self.translator:
-                articles = self.translator.translate_articles(articles)
+                articles = self.translator.translate_articles(articles, target_language=target_language)
 
             self.grouped_articles = self._group_by_category(articles)
 

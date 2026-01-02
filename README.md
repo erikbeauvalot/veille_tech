@@ -197,9 +197,9 @@ Ou plus simplement, utilisez les scripts fournis (voir la section "Utilisation" 
 }
 ```
 
-### 7. Configurer la Traduction en Français ⭐ NEW
+### 7. Configurer la Traduction multilingue ⭐ NEW
 
-Le système traduit automatiquement tous les résumés des articles en français en utilisant l'API Claude.
+Le système traduit automatiquement tous les résumés des articles dans la langue de votre choix en utilisant l'API Claude.
 
 #### Configuration de la clé API
 
@@ -224,6 +224,34 @@ ANTHROPIC_API_KEY=sk-your-api-key-here
 3. Aller à l'onglet "API keys"
 4. Créer une nouvelle clé
 5. Copier la clé dans le fichier `.env`
+
+#### Choisir la langue de traduction
+
+Éditer `config.json` et modifier le champ `language_preference` :
+
+```json
+{
+  "language_preference": "French",
+  ...
+}
+```
+
+**Langues supportées** :
+- `French` (Français)
+- `English` (Anglais)
+- `Spanish` (Espagnol)
+- `German` (Allemand)
+- `Italian` (Italien)
+- `Portuguese` (Portugais)
+- `Dutch` (Néerlandais)
+- `Russian` (Russe)
+- `Chinese` (Chinois)
+- `Japanese` (Japonais)
+
+**Comportement intelligent** :
+- ✅ Si les articles sont déjà dans la langue choisie → Pas de traduction (évite les appels API inutiles)
+- ✅ Si articles dans autre langue → Traduction automatique
+- ✅ Cache des traductions pour optimiser les appels API
 
 **Note** : Sans clé API, le système fonctionne normalement mais les résumés restent en anglais (texte original des flux RSS).
 
@@ -376,9 +404,24 @@ Structure complète :
     }
   ],
   "max_articles_per_feed": 5,
+  "language_preference": "French",
+  "rss_discovery": {
+    "enabled": true,
+    "max_new_feeds_per_run": 2,
+    "validate_feeds": true,
+    "auto_add_feeds": false
+  },
   "last_execution": "2024-01-15T09:30:00.000000"
 }
 ```
+
+**Champs** :
+- `email` : Configuration SMTP pour l'envoi d'emails
+- `rss_feeds` : Liste des flux RSS à surveiller
+- `max_articles_per_feed` : Nombre max d'articles par catégorie
+- `language_preference` : Langue pour les traductions (French, English, Spanish, etc.)
+- `rss_discovery` : Configuration de la découverte automatique de flux
+- `last_execution` : Timestamp de la dernière exécution (auto-updated)
 
 ### Fichiers de log
 

@@ -135,6 +135,15 @@ class ConfigManager:
         """
         return self.config.get("email", {}).copy()
 
+    def get_language_preference(self) -> str:
+        """
+        Get the language preference for article translations.
+
+        Returns:
+            Language name (e.g., 'French', 'English')
+        """
+        return self.config.get("language_preference", "French")
+
     def update_last_execution(self) -> Dict[str, str]:
         """
         Update the last execution timestamp.
