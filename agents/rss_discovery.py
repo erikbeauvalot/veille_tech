@@ -2,6 +2,7 @@
 RSS Discovery Agent - Automatically discovers new interesting RSS feeds
 """
 
+import logging
 import requests
 import feedparser
 from typing import List, Dict, Any, Optional
@@ -12,14 +13,16 @@ import re
 class RSSDiscovery:
     """Discovers and validates new RSS feeds automatically."""
 
-    def __init__(self, timeout: int = 10):
+    def __init__(self, timeout: int = 10, logger: logging.Logger = None):
         """
         Initialize the RSS Discovery agent.
 
         Args:
             timeout: Request timeout in seconds
+            logger: Logger instance for logging
         """
         self.timeout = timeout
+        self.logger = logger
         self.discovered_feeds: List[Dict[str, str]] = []
         self.status = "not_run"
         self.message = ""

@@ -2,6 +2,7 @@
 Content Analyzer & Summarizer Agent - Groups articles and generates HTML summary
 """
 
+import logging
 from typing import List, Dict, Any
 from datetime import datetime
 import re
@@ -11,14 +12,16 @@ from .translator import Translator
 class ContentAnalyzer:
     """Analyzes content and groups articles by category."""
 
-    def __init__(self, provider: str = "Claude", model: str = None):
+    def __init__(self, provider: str = "Claude", model: str = None, logger: logging.Logger = None):
         """
         Initialize the Content Analyzer.
 
         Args:
             provider: Translation provider ("Claude" or "OpenAI")
             model: Model to use (optional, uses defaults if not specified)
+            logger: Logger instance for logging
         """
+        self.logger = logger
         self.grouped_articles: Dict[str, List[Dict[str, Any]]] = {}
         self.status = "not_analyzed"
         self.message = ""
@@ -26,11 +29,14 @@ class ContentAnalyzer:
         self.translation_model = model
         self.target_language = "French"  # Default target language
         try:
-            self.translator = Translator.create(provider, model=model)
+            self.translator = Translator.create(provider, model=model, logger=self.logger)
         except ValueError as e:
             # If API key not set or invalid provider, translator will be None
             self.translator = None
-            print(f"Translation disabled: {str(e)}")
+            if self.logger:
+                self.logger.warning(f"[CONTENT_ANALYZER] Translation disabled: {str(e)}")
+            else:
+                print(f"Translation disabled: {str(e)}")
 
     def analyze_and_group(
         self, articles: List[Dict[str, Any]], target_language: str = "French"

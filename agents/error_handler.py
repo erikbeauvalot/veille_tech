@@ -14,16 +14,18 @@ from logging.handlers import RotatingFileHandler
 class ErrorHandler:
     """Handles errors and logging throughout the system."""
 
-    def __init__(self, log_dir: str = "logs", log_file: str = "veille_tech.log"):
+    def __init__(self, log_dir: str = "logs", log_file: str = "veille_tech.log", console_level: str = "INFO"):
         """
         Initialize the Error Handler.
 
         Args:
             log_dir: Directory for log files
             log_file: Name of the log file
+            console_level: Console logging level (ERROR, WARNING, INFO, DEBUG)
         """
         self.log_dir = log_dir
         self.log_file = os.path.join(log_dir, log_file)
+        self.console_level = console_level.upper()
         self.logger = self._setup_logger()
         self.errors: list = []
 
@@ -41,9 +43,9 @@ class ErrorHandler:
         logger = logging.getLogger("veille_tech")
         logger.setLevel(logging.DEBUG)
 
-        # Console handler (INFO level)
+        # Console handler (configurable level)
         console_handler = logging.StreamHandler(sys.stdout)
-        console_handler.setLevel(logging.INFO)
+        console_handler.setLevel(getattr(logging, self.console_level))
         console_format = logging.Formatter(
             "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
             datefmt="%d/%m/%Y %H:%M:%S",
@@ -263,3 +265,26 @@ Context:
             "agents_with_errors": agents_with_errors,
             "log_file_path": self.log_file,
         }
+
+    def set_console_level(self, level: str) -> None:
+        """
+        Change console logging level at runtime.
+
+        Args:
+            level: New logging level (ERROR, WARNING, INFO, DEBUG)
+        """
+        valid_levels = ["ERROR", "WARNING", "INFO", "DEBUG"]
+        level_upper = level.upper()
+
+        if level_upper not in valid_levels:
+            self.logger.warning(f"Invalid log level: {level}, keeping current level")
+            return
+
+        self.console_level = level_upper
+
+        # Update existing console handler
+        for handler in self.logger.handlers:
+            if isinstance(handler, logging.StreamHandler) and not isinstance(handler, RotatingFileHandler):
+                handler.setLevel(getattr(logging, level_upper))
+                self.logger.info(f"Console log level changed to {level_upper}")
+                break

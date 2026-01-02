@@ -2,6 +2,7 @@
 RSS Fetcher Agent - Retrieves and parses RSS feeds from configured sources
 """
 
+import logging
 import feedparser
 import requests
 from typing import List, Dict, Any, Optional
@@ -12,14 +13,16 @@ from email.utils import parsedate_to_datetime
 class RSsFetcher:
     """Fetches and parses RSS feeds from multiple sources."""
 
-    def __init__(self, timeout: int = 10):
+    def __init__(self, timeout: int = 10, logger: logging.Logger = None):
         """
         Initialize the RSS Fetcher.
 
         Args:
             timeout: Request timeout in seconds
+            logger: Logger instance for logging
         """
         self.timeout = timeout
+        self.logger = logger
         self.articles: List[Dict[str, Any]] = []
         self.status = "not_fetched"
         self.message = ""
@@ -35,6 +38,9 @@ class RSsFetcher:
         Returns:
             Dict with 'status', 'message', 'articles', and 'errors'
         """
+        if self.logger:
+            self.logger.debug(f"[RSS_FETCHER] Starting to fetch {len(feeds_config)} RSS feeds")
+
         self.articles = []
         self.errors = []
 
@@ -42,7 +48,10 @@ class RSsFetcher:
             self._fetch_single_feed(feed_config)
 
         # Deduplicate articles by link
+        original_count = len(self.articles)
         self.articles = self._deduplicate_articles()
+        if self.logger:
+            self.logger.debug(f"[RSS_FETCHER] Deduplicated {len(self.articles)} articles from {original_count} raw articles")
 
         self.status = "success" if not self.errors else "partial_success"
         self.message = f"Fetched {len(self.articles)} articles from {len(feeds_config)} feeds"
@@ -71,6 +80,9 @@ class RSsFetcher:
                 self.errors.append({"feed": feed_name, "error": "Missing URL"})
                 return
 
+            if self.logger:
+                self.logger.debug(f"[RSS_FETCHER] Fetching feed: {feed_name} ({feed_url})")
+
             # Set User-Agent to avoid being blocked
             headers = {
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
@@ -82,6 +94,9 @@ class RSsFetcher:
 
             # Parse feed
             feed = feedparser.parse(response.content)
+
+            if self.logger:
+                self.logger.debug(f"[RSS_FETCHER] Parsed {len(feed.entries)} entries from {feed_name}")
 
             if feed.bozo:
                 # Feed parsed with errors, but still try to extract articles
@@ -95,12 +110,20 @@ class RSsFetcher:
 
         except requests.exceptions.Timeout:
             self.errors.append({"feed": feed_name, "error": "Timeout"})
+            if self.logger:
+                self.logger.warning(f"[RSS_FETCHER] Timeout fetching {feed_name}")
         except requests.exceptions.ConnectionError:
             self.errors.append({"feed": feed_name, "error": "Connection error"})
+            if self.logger:
+                self.logger.warning(f"[RSS_FETCHER] Connection error for {feed_name}")
         except requests.exceptions.HTTPError as e:
             self.errors.append({"feed": feed_name, "error": f"HTTP {e.response.status_code}"})
+            if self.logger:
+                self.logger.warning(f"[RSS_FETCHER] HTTP {e.response.status_code} error for {feed_name}")
         except Exception as e:
             self.errors.append({"feed": feed_name, "error": str(e)})
+            if self.logger:
+                self.logger.warning(f"[RSS_FETCHER] Error fetching {feed_name}: {str(e)}")
 
     def _extract_article(
         self, entry: Any, feed_name: str, category: str

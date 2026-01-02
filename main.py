@@ -5,9 +5,10 @@ Coordinates all agents to fetch, analyze, and send tech news.
 """
 
 import sys
+import time
 import argparse
 from datetime import datetime
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
@@ -26,16 +27,28 @@ from agents import (
 class VeilleTechOrchestrator:
     """Main orchestrator that coordinates all agents."""
 
-    def __init__(self, config_path: str = "config.json"):
+    def __init__(self, config_path: str = "config.json", log_level: Optional[str] = None):
         """
         Initialize the orchestrator.
 
         Args:
             config_path: Path to configuration file
+            log_level: Logging level override (ERROR, WARNING, INFO, DEBUG)
         """
         self.config_path = config_path
         self.config_manager = ConfigManager(config_path)
-        self.error_handler = ErrorHandler()
+
+        # Determine effective log level
+        if log_level is None:
+            # Load config to get log_level
+            config_result = self.config_manager.load_config()
+            if config_result["status"] == "success":
+                log_level = self.config_manager.get_log_level()
+            else:
+                log_level = "INFO"  # fallback
+
+        # Create error handler with configured level
+        self.error_handler = ErrorHandler(console_level=log_level)
         self.dry_run = False
         self.force = False
 
@@ -70,7 +83,7 @@ class VeilleTechOrchestrator:
             # Step 2: Discover new RSS feeds
             if discovery_config.get("enabled", True):
                 self.error_handler.log_info("Discovering new RSS feeds...", "ORCHESTRATOR")
-                discovery = RSSDiscovery()
+                discovery = RSSDiscovery(logger=self.error_handler.logger)
                 discovery_result = discovery.discover_feeds(
                     existing_feeds=rss_feeds,
                     max_new_feeds=discovery_config.get("max_new_feeds_per_run", 2),
@@ -116,7 +129,7 @@ class VeilleTechOrchestrator:
 
             # Step 3: Fetch RSS feeds
             self.error_handler.log_info(f"Fetching {len(rss_feeds)} RSS feeds...", "ORCHESTRATOR")
-            rss_fetcher = RSsFetcher()
+            rss_fetcher = RSsFetcher(logger=self.error_handler.logger)
             fetch_result = rss_fetcher.fetch_feeds(rss_feeds)
 
             if fetch_result["status"] == "error":
@@ -178,7 +191,7 @@ class VeilleTechOrchestrator:
                 f"Translating articles to {language_preference} using {translation_provider} ({translation_model})",
                 "ORCHESTRATOR",
             )
-            content_analyzer = ContentAnalyzer(provider=translation_provider, model=translation_model)
+            content_analyzer = ContentAnalyzer(provider=translation_provider, model=translation_model, logger=self.error_handler.logger)
             analysis_result = content_analyzer.analyze_and_group(articles, target_language=language_preference)
 
             if analysis_result["status"] != "success":
@@ -191,13 +204,13 @@ class VeilleTechOrchestrator:
             articles_html = content_analyzer.generate_html(grouped_articles)
 
             # Step 8: Create complete email HTML
-            email_sender = EmailSender()
+            email_sender = EmailSender(logger=self.error_handler.logger)
             stats = {
                 "total_articles": analysis_result["total_articles"],
                 "total_categories": analysis_result["total_categories"],
             }
             newsletter_html = email_sender.generate_newsletter_html(articles_html, stats)
-
+            
             # Step 9: Send email (or dry-run)
             if self.dry_run:
                 self.error_handler.log_info(
@@ -334,11 +347,28 @@ def main():
         default="config.json",
         help="Path to configuration file (default: config.json)",
     )
+    parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="Enable verbose (DEBUG) logging",
+    )
+    parser.add_argument(
+        "--log-level",
+        choices=["ERROR", "WARNING", "INFO", "DEBUG"],
+        help="Set logging level (overrides config.json)",
+    )
 
     args = parser.parse_args()
 
+    # Determine effective log level (CLI > config > default)
+    log_level = None
+    if args.verbose:
+        log_level = "DEBUG"
+    elif args.log_level:
+        log_level = args.log_level
+
     # Run orchestrator
-    orchestrator = VeilleTechOrchestrator(config_path=args.config)
+    orchestrator = VeilleTechOrchestrator(config_path=args.config, log_level=log_level)
     result = orchestrator.run(dry_run=args.dry_run, force=args.force)
 
     # Print result

@@ -261,3 +261,19 @@ class ConfigManager:
         new_feed = {"name": name, "url": url, "category": category}
         self.config.setdefault("rss_feeds", []).append(new_feed)
         return True
+
+    def get_log_level(self) -> str:
+        """
+        Get the configured log level.
+
+        Returns:
+            Log level name (ERROR, WARNING, INFO, DEBUG)
+        """
+        valid_levels = ["ERROR", "WARNING", "INFO", "DEBUG"]
+        configured = self.config.get("log_level", "INFO").upper()
+
+        if configured not in valid_levels:
+            # Return default if invalid
+            return "INFO"
+
+        return configured

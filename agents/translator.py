@@ -28,9 +28,10 @@ class BaseTranslator(ABC):
         "Japanese": "ja",
     }
 
-    def __init__(self):
+    def __init__(self, logger = None):
         """Initialize the translator."""
         self.cache = {}
+        self.logger = logger
 
     @abstractmethod
     def _translate_text_api(self, text: str, target_language: str) -> str:
@@ -145,15 +146,16 @@ class BaseTranslator(ABC):
 class ClaudeTranslator(BaseTranslator):
     """Translator using Claude API."""
 
-    def __init__(self, model: str = "claude-opus-4-1-20250805"):
+    def __init__(self, model: str = "claude-opus-4-1-20250805", logger = None):
         """
         Initialize Claude translator.
 
         Args:
             model: Claude model to use (default: claude-opus-4-1 - most efficient)
                    Options: claude-opus-4-1-20250805 (recommended)
+            logger: Logger instance for logging (optional)
         """
-        super().__init__()
+        super().__init__(logger=logger)
         api_key = os.getenv("ANTHROPIC_API_KEY")
         if not api_key:
             raise ValueError("ANTHROPIC_API_KEY environment variable not set")
@@ -185,15 +187,16 @@ Original text:
 class OpenAITranslator(BaseTranslator):
     """Translator using OpenAI API."""
 
-    def __init__(self, model: str = "gpt-3.5-turbo"):
+    def __init__(self, model: str = "gpt-3.5-turbo", logger = None):
         """
         Initialize OpenAI translator.
 
         Args:
             model: OpenAI model to use (default: gpt-3.5-turbo for lowest cost)
                    Options: gpt-3.5-turbo, gpt-4, gpt-4-turbo, gpt-4o
+            logger: Logger instance for logging (optional)
         """
-        super().__init__()
+        super().__init__(logger=logger)
         api_key = os.getenv("OPENAI_API_KEY")
         if not api_key:
             raise ValueError("OPENAI_API_KEY environment variable not set")
@@ -225,7 +228,7 @@ class Translator:
     """Factory class for creating the appropriate translator."""
 
     @staticmethod
-    def create(provider: str = "Claude", model: str = None) -> BaseTranslator:
+    def create(provider: str = "Claude", model: str = None, logger = None) -> BaseTranslator:
         """
         Create a translator instance based on the provider and model.
 
@@ -234,6 +237,7 @@ class Translator:
             model: Model name (optional, uses defaults if not specified)
                    Claude: claude-3-haiku-20250307, claude-3-sonnet-20250219, etc.
                    OpenAI: gpt-3.5-turbo, gpt-4, etc.
+            logger: Logger instance for logging (optional)
 
         Returns:
             Translator instance
@@ -246,11 +250,11 @@ class Translator:
         if provider == "claude":
             if model is None:
                 model = "claude-opus-4-1-20250805"  # Most efficient
-            return ClaudeTranslator(model=model)
+            return ClaudeTranslator(model=model, logger=logger)
         elif provider == "openai":
             if model is None:
                 model = "gpt-3.5-turbo"  # Least expensive
-            return OpenAITranslator(model=model)
+            return OpenAITranslator(model=model, logger=logger)
         else:
             raise ValueError(
                 f"Unsupported translation provider: {provider}. "

@@ -114,5 +114,6 @@
     "max_new_feeds_per_run": 2,
     "validate_feeds": true,
     "auto_add_feeds": false
-  }
+  },
+  "log_level": "INFO"
 }

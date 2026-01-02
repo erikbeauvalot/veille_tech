@@ -2,6 +2,7 @@
 Email Sender Agent - Sends HTML emails with newsletter content via SMTP
 """
 
+import logging
 import smtplib
 import os
 from pathlib import Path
@@ -16,8 +17,9 @@ from datetime import datetime
 class EmailSender:
     """Sends emails with HTML content and optional attachments."""
 
-    def __init__(self):
+    def __init__(self, logger: logging.Logger = None):
         """Initialize the Email Sender."""
+        self.logger = logger
         self.status = "not_sent"
         self.message = ""
         self.template_dir = Path(__file__).parent.parent / "templates"
