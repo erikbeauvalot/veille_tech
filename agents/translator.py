@@ -145,8 +145,15 @@ class BaseTranslator(ABC):
 class ClaudeTranslator(BaseTranslator):
     """Translator using Claude API."""
 
-    def __init__(self):
-        """Initialize Claude translator."""
+    def __init__(self, model: str = "claude-3-haiku-20250307"):
+        """
+        Initialize Claude translator.
+
+        Args:
+            model: Claude model to use (default: claude-3-haiku for lowest cost)
+                   Options: claude-3-haiku-20250307, claude-3-sonnet-20250219,
+                           claude-3-5-sonnet-20241022, claude-opus-4-1-20250805
+        """
         super().__init__()
         api_key = os.getenv("ANTHROPIC_API_KEY")
         if not api_key:
@@ -154,11 +161,12 @@ class ClaudeTranslator(BaseTranslator):
 
         from anthropic import Anthropic
         self.client = Anthropic()
+        self.model = model
 
     def _translate_text_api(self, text: str, target_language: str) -> str:
         """Translate text using Claude API."""
         message = self.client.messages.create(
-            model="claude-opus-4-5-20251101",
+            model=self.model,
             max_tokens=500,
             messages=[
                 {
@@ -178,8 +186,14 @@ Original text:
 class OpenAITranslator(BaseTranslator):
     """Translator using OpenAI API."""
 
-    def __init__(self):
-        """Initialize OpenAI translator."""
+    def __init__(self, model: str = "gpt-3.5-turbo"):
+        """
+        Initialize OpenAI translator.
+
+        Args:
+            model: OpenAI model to use (default: gpt-3.5-turbo for lowest cost)
+                   Options: gpt-3.5-turbo, gpt-4, gpt-4-turbo, gpt-4o
+        """
         super().__init__()
         api_key = os.getenv("OPENAI_API_KEY")
         if not api_key:
@@ -187,11 +201,12 @@ class OpenAITranslator(BaseTranslator):
 
         from openai import OpenAI
         self.client = OpenAI(api_key=api_key)
+        self.model = model
 
     def _translate_text_api(self, text: str, target_language: str) -> str:
         """Translate text using OpenAI API."""
         response = self.client.chat.completions.create(
-            model="gpt-3.5-turbo",
+            model=self.model,
             messages=[
                 {
                     "role": "system",
@@ -211,12 +226,15 @@ class Translator:
     """Factory class for creating the appropriate translator."""
 
     @staticmethod
-    def create(provider: str = "Claude") -> BaseTranslator:
+    def create(provider: str = "Claude", model: str = None) -> BaseTranslator:
         """
-        Create a translator instance based on the provider.
+        Create a translator instance based on the provider and model.
 
         Args:
             provider: Translation provider ("Claude" or "OpenAI")
+            model: Model name (optional, uses defaults if not specified)
+                   Claude: claude-3-haiku-20250307, claude-3-sonnet-20250219, etc.
+                   OpenAI: gpt-3.5-turbo, gpt-4, etc.
 
         Returns:
             Translator instance
@@ -227,9 +245,13 @@ class Translator:
         provider = provider.lower().strip()
 
         if provider == "claude":
-            return ClaudeTranslator()
+            if model is None:
+                model = "claude-3-haiku-20250307"  # Least expensive
+            return ClaudeTranslator(model=model)
         elif provider == "openai":
-            return OpenAITranslator()
+            if model is None:
+                model = "gpt-3.5-turbo"  # Least expensive
+            return OpenAITranslator(model=model)
         else:
             raise ValueError(
                 f"Unsupported translation provider: {provider}. "

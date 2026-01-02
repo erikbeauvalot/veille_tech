@@ -221,21 +221,38 @@ OPENAI_API_KEY=sk-your-openai-api-key-here
 
 3. La traduction s'activera automatiquement au prochain lancement
 
-#### Choisir le provider de traduction
+#### Choisir le provider et le modèle de traduction
 
-Éditer `config.json` et modifier les champs `translation_provider` et `language_preference` :
+Éditer `config.json` et configurer :
 
 ```json
 {
   "language_preference": "French",
   "translation_provider": "Claude",
-  ...
+  "translation_config": {
+    "claude": {
+      "model": "claude-3-haiku-20250307"
+    },
+    "openai": {
+      "model": "gpt-3.5-turbo"
+    }
+  }
 }
 ```
 
-**Providers disponibles** :
-- `Claude` (par défaut) - Utilise Claude Opus 4.5
-- `OpenAI` - Utilise GPT-3.5-turbo
+**Providers et modèles disponibles** :
+
+**Claude** (par défaut - moins cher) :
+- `claude-3-haiku-20250307` ⭐ (recommandé - moins cher)
+- `claude-3-sonnet-20250219` (équilibre qualité/prix)
+- `claude-3-5-sonnet-20241022` (plus puissant)
+- `claude-opus-4-1-20250805` (le plus puissant)
+
+**OpenAI** :
+- `gpt-3.5-turbo` ⭐ (recommandé - moins cher)
+- `gpt-4` (plus puissant)
+- `gpt-4-turbo` (plus rapide que GPT-4)
+- `gpt-4o` (optimisé)
 
 #### Choisir la langue de traduction
 
@@ -431,6 +448,14 @@ Structure complète :
   "max_articles_per_feed": 5,
   "language_preference": "French",
   "translation_provider": "Claude",
+  "translation_config": {
+    "claude": {
+      "model": "claude-3-haiku-20250307"
+    },
+    "openai": {
+      "model": "gpt-3.5-turbo"
+    }
+  },
   "rss_discovery": {
     "enabled": true,
     "max_new_feeds_per_run": 2,
@@ -447,6 +472,9 @@ Structure complète :
 - `max_articles_per_feed` : Nombre max d'articles par catégorie
 - `language_preference` : Langue pour les traductions (French, English, Spanish, etc.)
 - `translation_provider` : Fournisseur de traduction (Claude ou OpenAI)
+- `translation_config` : Configuration du modèle pour chaque provider
+  - `claude.model` : Modèle Claude à utiliser (défaut: claude-3-haiku)
+  - `openai.model` : Modèle OpenAI à utiliser (défaut: gpt-3.5-turbo)
 - `rss_discovery` : Configuration de la découverte automatique de flux
 - `last_execution` : Timestamp de la dernière exécution (auto-updated)
 

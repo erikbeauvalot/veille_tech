@@ -173,11 +173,12 @@ class VeilleTechOrchestrator:
             self.error_handler.log_info("Analyzing and grouping articles...", "ORCHESTRATOR")
             language_preference = self.config_manager.get_language_preference()
             translation_provider = self.config_manager.get_translation_provider()
+            translation_model = self.config_manager.get_model_for_provider(translation_provider)
             self.error_handler.log_info(
-                f"Translating articles to {language_preference} using {translation_provider}",
+                f"Translating articles to {language_preference} using {translation_provider} ({translation_model})",
                 "ORCHESTRATOR",
             )
-            content_analyzer = ContentAnalyzer(provider=translation_provider)
+            content_analyzer = ContentAnalyzer(provider=translation_provider, model=translation_model)
             analysis_result = content_analyzer.analyze_and_group(articles, target_language=language_preference)
 
             if analysis_result["status"] != "success":

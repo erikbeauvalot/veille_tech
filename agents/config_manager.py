@@ -153,6 +153,47 @@ class ConfigManager:
         """
         return self.config.get("translation_provider", "Claude")
 
+    def get_translation_config(self, provider: str) -> Dict[str, Any]:
+        """
+        Get the translation configuration for a specific provider.
+
+        Args:
+            provider: Provider name ('claude' or 'openai')
+
+        Returns:
+            Configuration dictionary for the provider
+        """
+        translation_config = self.config.get("translation_config", {})
+        provider_lower = provider.lower()
+
+        # Default configs for each provider (least expensive models)
+        defaults = {
+            "claude": {"model": "claude-3-haiku-20250307"},
+            "openai": {"model": "gpt-3.5-turbo"},
+        }
+
+        return translation_config.get(provider_lower, defaults.get(provider_lower, {}))
+
+    def get_model_for_provider(self, provider: str) -> str:
+        """
+        Get the model name for a specific provider.
+
+        Args:
+            provider: Provider name ('claude' or 'openai')
+
+        Returns:
+            Model name
+        """
+        config = self.get_translation_config(provider)
+        provider_lower = provider.lower()
+
+        if provider_lower == "claude":
+            return config.get("model", "claude-3-haiku-20250307")
+        elif provider_lower == "openai":
+            return config.get("model", "gpt-3.5-turbo")
+        else:
+            return ""
+
     def update_last_execution(self) -> Dict[str, str]:
         """
         Update the last execution timestamp.
