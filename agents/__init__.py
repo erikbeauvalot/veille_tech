@@ -7,6 +7,7 @@ from .rss_fetcher import RSsFetcher
 from .content_analyzer import ContentAnalyzer
 from .email_sender import EmailSender
 from .error_handler import ErrorHandler
+from .rss_discovery import RSSDiscovery
 
 __all__ = [
     "ConfigManager",
@@ -14,4 +15,5 @@ __all__ = [
     "ContentAnalyzer",
     "EmailSender",
     "ErrorHandler",
+    "RSSDiscovery",
 ]

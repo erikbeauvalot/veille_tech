@@ -165,3 +165,40 @@ class ConfigManager:
             Max articles count (default: 5)
         """
         return self.config.get("max_articles_per_feed", 5)
+
+    def get_rss_discovery_config(self) -> Dict[str, Any]:
+        """
+        Get the RSS discovery configuration.
+
+        Returns:
+            RSS discovery configuration dictionary
+        """
+        default_config = {
+            "enabled": True,
+            "max_new_feeds_per_run": 2,
+            "validate_feeds": True,
+            "auto_add_feeds": False,
+        }
+        return self.config.get("rss_discovery", default_config)
+
+    def add_rss_feed(self, name: str, url: str, category: str) -> bool:
+        """
+        Add a new RSS feed to the configuration.
+
+        Args:
+            name: Feed name
+            url: Feed URL
+            category: Feed category
+
+        Returns:
+            True if added successfully, False if already exists
+        """
+        # Check if feed already exists
+        existing_urls = {feed.get("url") for feed in self.config.get("rss_feeds", [])}
+        if url in existing_urls:
+            return False
+
+        # Add new feed
+        new_feed = {"name": name, "url": url, "category": category}
+        self.config.setdefault("rss_feeds", []).append(new_feed)
+        return True

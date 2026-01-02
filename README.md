@@ -5,6 +5,7 @@ Système automatisé de surveillance technologique qui récupère quotidiennemen
 ## 🎯 Fonctionnalités
 
 - ✅ Récupération multi-sources RSS (AI, Cybersecurity, Cloud, Tech)
+- ✅ **Découverte automatique de nouveaux flux RSS** à chaque exécution
 - ✅ Génération HTML responsive et professionnelle
 - ✅ Envoi automatique par email via SMTP (Gmail, etc.)
 - ✅ Déduplication des articles
@@ -12,7 +13,7 @@ Système automatisé de surveillance technologique qui récupère quotidiennemen
 - ✅ Gestion robuste des erreurs et logging détaillé
 - ✅ Mode dry-run pour tester sans envoyer d'email
 - ✅ Notifications d'erreur automatiques
-- ✅ Architecture modulaire avec agents séparés
+- ✅ Architecture modulaire avec 6 agents séparés
 
 ## 📋 Architecture
 
@@ -23,6 +24,7 @@ veille_tech/
 ├── main.py                 # Orchestrateur principal
 ├── agents/
 │   ├── config_manager.py   # Gestion de la configuration
+│   ├── rss_discovery.py    # Découverte automatique de nouveaux flux
 │   ├── rss_fetcher.py      # Récupération des flux RSS
 │   ├── content_analyzer.py # Analyse et groupage des articles
 │   ├── email_sender.py     # Envoi des emails
@@ -40,28 +42,38 @@ veille_tech/
 - Sauvegarde les modifications
 - Gère le timestamp de dernière exécution
 - Valide la structure JSON
+- Ajoute de nouveaux flux à la configuration
 
-#### 2. RSS Fetcher (`rss_fetcher.py`)
+#### 2. RSS Discovery (`rss_discovery.py`) ⭐ NEW
+- Découvre automatiquement de nouveaux flux RSS intéressants
+- Teste une base de sites tech populaires (TechCrunch, VentureBeat, etc.)
+- Valide l'accessibilité des flux avant de les ajouter
+- Catégorise automatiquement les flux (AI, Cybersecurity, Cloud, Dev, Tech)
+- Évite les doublons avec les flux existants
+- S'exécute au début de chaque run pour enrichir vos sources
+- Modes : "notification" (logs) ou "auto-add" (ajout automatique)
+
+#### 3. RSS Fetcher (`rss_fetcher.py`)
 - Récupère les flux RSS configurés
 - Gère les erreurs réseau (timeouts, 404, etc.)
 - Déduplique les articles
 - Filtre par date si configuré
 - Limite le nombre d'articles par catégorie
 
-#### 3. Content Analyzer (`content_analyzer.py`)
+#### 4. Content Analyzer (`content_analyzer.py`)
 - Groupe les articles par catégorie
 - Génère du HTML structuré et responsive
 - Extrait les informations clés (titre, lien, résumé, date)
 - Crée une table des matières
 
-#### 4. Email Sender (`email_sender.py`)
+#### 5. Email Sender (`email_sender.py`)
 - Génère l'HTML complète du newsletter
 - Envoie via SMTP (support Gmail, Outlook, etc.)
 - Supporte les pièces jointes
 - Gère les erreurs d'envoi
 - Design responsive et professionnel
 
-#### 5. Error Handler (`error_handler.py`)
+#### 6. Error Handler (`error_handler.py`)
 - Capture les erreurs avec contexte
 - Logging détaillé en fichier et console
 - Rotation de fichiers de log (5MB max)
@@ -153,9 +165,53 @@ pip install -r requirements.txt
       "category": "Cybersecurity"
     }
   ],
-  "max_articles_per_feed": 5
+  "max_articles_per_feed": 5,
+  "rss_discovery": {
+    "enabled": true,
+    "max_new_feeds_per_run": 2,
+    "validate_feeds": true,
+    "auto_add_feeds": false
+  }
 }
 ```
+
+### 7. Configurer la Découverte Automatique de Flux RSS ⭐
+
+La découverte automatique teste des sites tech populaires et vous propose de nouveaux flux RSS :
+
+```json
+{
+  "rss_discovery": {
+    "enabled": true,
+    "max_new_feeds_per_run": 2,
+    "validate_feeds": true,
+    "auto_add_feeds": false
+  }
+}
+```
+
+**Paramètres** :
+- `enabled` (bool) : Active/désactive la découverte (défaut: `true`)
+- `max_new_feeds_per_run` (int) : Maximum de nouveaux flux à découvrir par exécution (défaut: `2`)
+- `validate_feeds` (bool) : Valide que les flux sont accessibles avant de les proposer (défaut: `true`)
+- `auto_add_feeds` (bool) : Ajoute automatiquement les nouveaux flux trouvés à la config (défaut: `false`)
+  - `false` : Les nouveaux flux sont listés dans les logs pour votre review
+  - `true` : Les nouveaux flux sont ajoutés automatiquement au config.json
+
+**Exemple avec auto-add activé** :
+
+```json
+{
+  "rss_discovery": {
+    "enabled": true,
+    "max_new_feeds_per_run": 3,
+    "validate_feeds": true,
+    "auto_add_feeds": true
+  }
+}
+```
+
+À chaque exécution, le système découvrira automatiquement jusqu'à 3 nouveaux flux intéressants et les ajoutera au config.json. Les logs vous montreront les flux découverts et ajoutés.
 
 ## 📖 Utilisation
 

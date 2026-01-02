@@ -15,6 +15,7 @@ from agents import (
     ContentAnalyzer,
     EmailSender,
     ErrorHandler,
+    RSSDiscovery,
 )
 
 
@@ -60,8 +61,56 @@ class VeilleTechOrchestrator:
             config = self.config_manager.get_config()
             rss_feeds = self.config_manager.get_rss_feeds()
             email_config = self.config_manager.get_email_config()
+            discovery_config = self.config_manager.get_rss_discovery_config()
 
-            # Step 2: Fetch RSS feeds
+            # Step 2: Discover new RSS feeds
+            if discovery_config.get("enabled", True):
+                self.error_handler.log_info("Discovering new RSS feeds...", "ORCHESTRATOR")
+                discovery = RSSDiscovery()
+                discovery_result = discovery.discover_feeds(
+                    existing_feeds=rss_feeds,
+                    max_new_feeds=discovery_config.get("max_new_feeds_per_run", 2),
+                    validate=discovery_config.get("validate_feeds", True),
+                )
+
+                if discovery_result.get("discovered_feeds"):
+                    self.error_handler.log_info(
+                        f"Discovered {discovery_result['count']} new feeds",
+                        "RSS_DISCOVERY",
+                    )
+
+                    # Auto-add new feeds if enabled
+                    if discovery_config.get("auto_add_feeds", False):
+                        for feed in discovery_result["discovered_feeds"]:
+                            if self.config_manager.add_rss_feed(
+                                feed["name"], feed["url"], feed["category"]
+                            ):
+                                self.error_handler.log_info(
+                                    f"Added new feed: {feed['name']}",
+                                    "RSS_DISCOVERY",
+                                )
+                                rss_feeds = self.config_manager.get_rss_feeds()
+                        # Save updated config
+                        self.config_manager.save_config()
+                    else:
+                        # Log discovered feeds for user review
+                        self.error_handler.log_info(
+                            "New feeds discovered but auto_add_feeds is disabled. "
+                            "Review in logs and add manually if interested.",
+                            "RSS_DISCOVERY",
+                        )
+                        for feed in discovery_result["discovered_feeds"]:
+                            self.error_handler.log_info(
+                                f"  - {feed['name']} ({feed['category']}): {feed['url']}",
+                                "RSS_DISCOVERY",
+                            )
+                else:
+                    self.error_handler.log_info(
+                        "No new interesting feeds discovered",
+                        "RSS_DISCOVERY",
+                    )
+
+            # Step 3: Fetch RSS feeds
             self.error_handler.log_info(f"Fetching {len(rss_feeds)} RSS feeds...", "ORCHESTRATOR")
             rss_fetcher = RSsFetcher()
             fetch_result = rss_fetcher.fetch_feeds(rss_feeds)
@@ -82,7 +131,7 @@ class VeilleTechOrchestrator:
                         "RSS_FETCHER",
                     )
 
-            # Step 3: Filter articles by date if not forcing
+            # Step 4: Filter articles by date if not forcing
             if not force:
                 last_execution = self.config_manager.get_last_execution()
                 if last_execution:
@@ -92,7 +141,7 @@ class VeilleTechOrchestrator:
                         "ORCHESTRATOR",
                     )
 
-            # Step 4: Limit articles per feed
+            # Step 5: Limit articles per feed
             max_articles = self.config_manager.get_max_articles_per_feed()
             articles = rss_fetcher.limit_articles(articles, max_articles)
             self.error_handler.log_info(
@@ -100,7 +149,7 @@ class VeilleTechOrchestrator:
                 "ORCHESTRATOR",
             )
 
-            # Step 5: Analyze and group content
+            # Step 6: Analyze and group content
             self.error_handler.log_info("Analyzing and grouping articles...", "ORCHESTRATOR")
             content_analyzer = ContentAnalyzer()
             analysis_result = content_analyzer.analyze_and_group(articles)
@@ -110,11 +159,11 @@ class VeilleTechOrchestrator:
 
             grouped_articles = analysis_result["grouped_articles"]
 
-            # Step 6: Generate HTML
+            # Step 7: Generate HTML
             self.error_handler.log_info("Generating HTML content...", "ORCHESTRATOR")
             articles_html = content_analyzer.generate_html(grouped_articles)
 
-            # Step 7: Create complete email HTML
+            # Step 8: Create complete email HTML
             email_sender = EmailSender()
             stats = {
                 "total_articles": analysis_result["total_articles"],
@@ -122,7 +171,7 @@ class VeilleTechOrchestrator:
             }
             newsletter_html = email_sender.generate_newsletter_html(articles_html, stats)
 
-            # Step 8: Send email (or dry-run)
+            # Step 9: Send email (or dry-run)
             if self.dry_run:
                 self.error_handler.log_info(
                     "DRY RUN MODE - Not sending email", "ORCHESTRATOR"
@@ -155,7 +204,7 @@ class VeilleTechOrchestrator:
                     "ORCHESTRATOR",
                 )
 
-            # Step 9: Update last execution time
+            # Step 10: Update last execution time
             self.config_manager.update_last_execution()
             self.error_handler.log_info(
                 "Updated last execution timestamp",
