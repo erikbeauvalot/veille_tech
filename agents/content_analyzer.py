@@ -109,18 +109,23 @@ class ContentAnalyzer:
         """
         Generate HTML summary from grouped articles.
 
+        Format: TOC → Executive Summaries → Detailed Articles
+
         Args:
             grouped_articles: Articles grouped by category
 
         Returns:
-            HTML string
+            Complete HTML content
         """
         html_content = ""
 
         # Generate table of contents
         html_content += self._generate_toc(grouped_articles)
 
-        # Generate sections for each category with summaries
+        # Generate executive summary section (all category summaries together)
+        html_content += self._generate_executive_summary_section(grouped_articles)
+
+        # Generate detailed article sections (by category, without summaries)
         for category, articles in grouped_articles.items():
             html_content += self._generate_category_section(category, articles)
 
@@ -147,9 +152,37 @@ class ContentAnalyzer:
 
         return toc_html
 
+    def _generate_executive_summary_section(self, grouped_articles: Dict[str, List[Dict[str, Any]]]) -> str:
+        """
+        Generate executive summary section with all category summaries.
+
+        Args:
+            grouped_articles: Articles grouped by category
+
+        Returns:
+            HTML for executive summary section
+        """
+        if not grouped_articles:
+            return ""
+
+        summary_html = '<div class="executive-summary">\n'
+        summary_html += '  <h2>📊 Résumés Exécutifs</h2>\n'
+
+        for category, articles in grouped_articles.items():
+            category_summary = self._generate_category_summary(articles)
+            if category_summary:
+                summary_html += '  <div class="summary-item">\n'
+                summary_html += f'    <h4>{category}</h4>\n'
+                summary_html += f'    <p>{category_summary}</p>\n'
+                summary_html += '  </div>\n'
+
+        summary_html += '</div>\n\n'
+
+        return summary_html
+
     def _generate_category_section(self, category: str, articles: List[Dict[str, Any]]) -> str:
         """
-        Generate HTML section for a category.
+        Generate HTML section for a category (details only, no summary).
 
         Args:
             category: Category name
@@ -161,14 +194,6 @@ class ContentAnalyzer:
         category_id = self._slugify(category)
         section_html = f'<section class="category" id="{category_id}">\n'
         section_html += f"  <h2>{category}</h2>\n"
-
-        # Generate category summary
-        category_summary = self._generate_category_summary(articles)
-        if category_summary:
-            section_html += f'  <div class="category-summary">\n'
-            section_html += f'    <h3>Résumé de la catégorie</h3>\n'
-            section_html += f'    <p>{category_summary}</p>\n'
-            section_html += f'  </div>\n\n'
 
         for article in articles:
             section_html += self._generate_article_html(article)

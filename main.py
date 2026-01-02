@@ -7,7 +7,7 @@ Coordinates all agents to fetch, analyze, and send tech news.
 import sys
 import time
 import argparse
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Dict, Any, Optional
 from dotenv import load_dotenv
 
@@ -52,13 +52,14 @@ class VeilleTechOrchestrator:
         self.dry_run = False
         self.force = False
 
-    def run(self, dry_run: bool = False, force: bool = False) -> Dict[str, Any]:
+    def run(self, dry_run: bool = False, force: bool = False, days_ago: Optional[str] = None) -> Dict[str, Any]:
         """
         Run the complete veille tech pipeline.
 
         Args:
             dry_run: If True, generate content but don't send email
             force: If True, ignore last execution date filter
+            days_ago: If provided, filter articles from this ISO datetime (ignores last_execution)
 
         Returns:
             Execution result dictionary
@@ -150,9 +151,19 @@ class VeilleTechOrchestrator:
 
             # Step 4: Filter articles by date if not forcing
             if not force:
-                last_execution = self.config_manager.get_last_execution()
-                if last_execution:
-                    articles = rss_fetcher.filter_by_date(articles, last_execution)
+                # Use --days parameter if provided, otherwise use last_execution
+                if days_ago:
+                    filter_date = days_ago
+                    days_count = (datetime.now() - datetime.fromisoformat(days_ago)).days
+                    self.error_handler.log_info(
+                        f"Filtering articles from last {days_count} days",
+                        "ORCHESTRATOR",
+                    )
+                else:
+                    filter_date = self.config_manager.get_last_execution()
+
+                if filter_date:
+                    articles = rss_fetcher.filter_by_date(articles, filter_date)
                     self.error_handler.log_info(
                         f"Filtered to {len(articles)} new articles",
                         "ORCHESTRATOR",
@@ -357,6 +368,12 @@ def main():
         choices=["ERROR", "WARNING", "INFO", "DEBUG"],
         help="Set logging level (overrides config.json)",
     )
+    parser.add_argument(
+        "--days",
+        type=int,
+        metavar="N",
+        help="Filter articles from last N days (ignores last_execution)",
+    )
 
     args = parser.parse_args()
 
@@ -367,9 +384,14 @@ def main():
     elif args.log_level:
         log_level = args.log_level
 
+    # Calculate date filter if --days provided
+    days_ago = None
+    if args.days:
+        days_ago = (datetime.now() - timedelta(days=args.days)).isoformat()
+
     # Run orchestrator
     orchestrator = VeilleTechOrchestrator(config_path=args.config, log_level=log_level)
-    result = orchestrator.run(dry_run=args.dry_run, force=args.force)
+    result = orchestrator.run(dry_run=args.dry_run, force=args.force, days_ago=days_ago)
 
     # Print result
     print("\n" + "=" * 50)

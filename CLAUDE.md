@@ -37,8 +37,15 @@ python main.py --dry-run
 # Ignore date filter and fetch all articles
 python main.py --force
 
+# Filter articles from last N days (ignores last_execution)
+python main.py --days 7           # Last 7 days
+python main.py --days 30 --dry-run  # Last 30 days, test mode
+
 # Custom log level
 python main.py --log-level DEBUG
+
+# Combine options
+python main.py --days 14 --dry-run --verbose
 
 # Using launch scripts (activates venv automatically)
 ./run.sh --dry-run          # macOS/Linux
@@ -197,6 +204,53 @@ ANTHROPIC_API_KEY=sk-ant-...
 OPENAI_API_KEY=sk-...
 ```
 
+### Date Filtering Precedence
+Articles are filtered based on this priority (highest → lowest):
+
+1. **`--force` flag** - Disables ALL filtering, fetches everything
+2. **`--days N` argument** - Filters to last N days, IGNORES `last_execution`
+3. **`last_execution` timestamp** - Default behavior, filters since last run
+4. **No filtering** - If none of the above apply
+
+**Examples:**
+```bash
+python main.py --force --days 7      # ❌ Wrong: force wins, ignores --days
+python main.py --days 7 --dry-run    # ✅ Correct: uses 7-day lookback
+python main.py                        # ✅ Correct: uses last_execution
+```
+
+### Email Structure
+The newsletter now uses an executive-friendly format:
+
+```
+┌─────────────────────────────────┐
+│ Header (Date + Title)           │
+├─────────────────────────────────┤
+│ Table of Contents               │
+│ • AI (5 articles)               │
+│ • Cloud (3 articles)            │
+├─────────────────────────────────┤
+│ 📊 Résumés Exécutifs            │
+│  AI: Summary from top 3...      │
+│  Cloud: Summary from top 3...   │
+├─────────────────────────────────┤
+│ Articles détaillés              │
+│ AI                              │
+│  • Article 1 with full details  │
+│  • Article 2 with full details  │
+│ Cloud                           │
+│  • Article 1 with full details  │
+├─────────────────────────────────┤
+│ Footer (Stats + Generated Time) │
+└─────────────────────────────────┘
+```
+
+**Benefits:**
+- Executive summary visible first for quick scanning
+- Detailed articles for deeper reading
+- All summaries grouped for comparison
+- Clear visual separation between sections
+
 ## Common Development Tasks
 
 ### Add a New Feature
@@ -232,8 +286,12 @@ if self.logger:
 |------|----------|
 | Change orchestration pipeline | `main.py` VeilleTechOrchestrator.run() method |
 | Modify article structure | `rss_fetcher.py` _extract_article() |
-| Change HTML output | `agents/content_analyzer.py` generate_html() |
+| Change HTML output structure | `agents/content_analyzer.py` generate_html() method |
+| Add executive summaries | `agents/content_analyzer.py` _generate_executive_summary_section() |
+| Modify email summaries | `agents/content_analyzer.py` _generate_category_summary() |
+| Adjust date filtering logic | `main.py` lines 152-170 (--days vs last_execution) |
 | Customize email template | `templates/newsletter.html` |
+| Style email sections | `templates/styles.css` (.executive-summary, .summary-item classes) |
 | Adjust log levels | Pass `--log-level` or set `config.json` log_level |
 | Add RSS feed category | Update `config.json` categories and rss_feeds arrays |
 | Change translation provider | `config.json` translation_provider and translation_config |

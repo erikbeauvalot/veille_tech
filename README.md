@@ -394,7 +394,11 @@ deactivate  # Quitter l'environnement quand fini
 - **Mode normal** : `python main.py` - Récupère les articles depuis la dernière exécution et envoie l'email (si articles trouvés)
 - **Mode dry-run** : `python main.py --dry-run` - Génère le newsletter et le sauvegarde dans `newsletter_output.html` sans envoyer d'email
 - **Mode force** : `python main.py --force` - Ignore la date de dernière exécution et récupère tous les articles disponibles
+- **Filtrer par jours** : `python main.py --days N` - Récupère les articles des N derniers jours (ignore `last_execution`)
+  - Exemple: `python main.py --days 7` (derniers 7 jours)
+  - Exemple: `python main.py --days 30 --dry-run` (derniers 30 jours, sans envoyer)
 - **Configuration personnalisée** : `python main.py --config /chemin/vers/config.json`
+- **Logging verbose** : `python main.py --verbose` ou `python main.py --log-level DEBUG` - Affiche plus de détails
 - **Combiner les options** : `python main.py --force --dry-run --config custom_config.json`
 
 ### Logique d'envoi
@@ -560,6 +564,25 @@ tail -50 logs/veille_tech.log
 # Suivre les logs en temps réel
 tail -f logs/veille_tech.log
 ```
+
+## 📧 Format des emails
+
+### Structure du newsletter
+
+Le newsletter suit une structure claire et professionnelle :
+
+1. **En-tête** - Logo et date d'exécution
+2. **Table des matières** - Liens rapides vers chaque catégorie
+3. **📊 Résumés Exécutifs** - Tous les résumés IA de chaque catégorie au même endroit
+4. **Articles détaillés** - Groupés par catégorie, avec titre, source, date et description
+5. **Pied de page** - Statistiques et timestamp de génération
+
+### Avantages du nouveau format
+
+- ✅ **Vue d'ensemble rapide** - Tous les résumés exécutifs ensemble pour une compréhension globale
+- ✅ **Lecture progressive** - Lire d'abord les résumés, puis approfondir avec les articles
+- ✅ **Design épuré** - Séparation claire entre résumés et détails
+- ✅ **Responsive** - Adapté aux mobiles et tablettes
 
 ## 🎨 Système de Templates
 
