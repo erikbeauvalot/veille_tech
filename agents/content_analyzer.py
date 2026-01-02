@@ -5,6 +5,7 @@ Content Analyzer & Summarizer Agent - Groups articles and generates HTML summary
 from typing import List, Dict, Any
 from datetime import datetime
 import re
+from .translator import Translator
 
 
 class ContentAnalyzer:
@@ -15,6 +16,11 @@ class ContentAnalyzer:
         self.grouped_articles: Dict[str, List[Dict[str, Any]]] = {}
         self.status = "not_analyzed"
         self.message = ""
+        try:
+            self.translator = Translator()
+        except ValueError:
+            # If API key not set, translator will be None
+            self.translator = None
 
     def analyze_and_group(self, articles: List[Dict[str, Any]]) -> Dict[str, Any]:
         """
@@ -27,6 +33,10 @@ class ContentAnalyzer:
             Dict with grouped articles and analysis results
         """
         try:
+            # Translate article descriptions to French if translator is available
+            if self.translator:
+                articles = self.translator.translate_articles(articles)
+
             self.grouped_articles = self._group_by_category(articles)
 
             # Sort categories and articles

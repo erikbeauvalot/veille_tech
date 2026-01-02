@@ -6,6 +6,7 @@ Système automatisé de surveillance technologique qui récupère quotidiennemen
 
 - ✅ Récupération multi-sources RSS (AI, Cybersecurity, Cloud, Tech)
 - ✅ **Découverte automatique de nouveaux flux RSS** à chaque exécution
+- ✅ **Traduction automatique des résumés en français** via Claude API
 - ✅ Génération HTML responsive et professionnelle
 - ✅ Envoi automatique par email via SMTP (Gmail, etc.)
 - ✅ Déduplication des articles
@@ -13,7 +14,7 @@ Système automatisé de surveillance technologique qui récupère quotidiennemen
 - ✅ Gestion robuste des erreurs et logging détaillé
 - ✅ Mode dry-run pour tester sans envoyer d'email
 - ✅ Notifications d'erreur automatiques
-- ✅ Architecture modulaire avec 6 agents séparés
+- ✅ Architecture modulaire avec 7 agents séparés
 
 ## 📋 Architecture
 
@@ -27,9 +28,11 @@ veille_tech/
 │   ├── rss_discovery.py    # Découverte automatique de nouveaux flux
 │   ├── rss_fetcher.py      # Récupération des flux RSS
 │   ├── content_analyzer.py # Analyse et groupage des articles
+│   ├── translator.py       # Traduction en français via Claude API
 │   ├── email_sender.py     # Envoi des emails
 │   └── error_handler.py    # Gestion des erreurs et logs
 ├── config.json             # Configuration (à remplir)
+├── .env.example            # Template pour les variables d'environnement
 ├── logs/                   # Fichiers de log
 ├── requirements.txt        # Dépendances Python
 └── README.md              # Ce fichier
@@ -44,7 +47,14 @@ veille_tech/
 - Valide la structure JSON
 - Ajoute de nouveaux flux à la configuration
 
-#### 2. RSS Discovery (`rss_discovery.py`) ⭐ NEW
+#### 2. Translator (`translator.py`) ⭐ NEW
+- Traduit automatiquement les résumés des articles en français
+- Utilise l'API Claude pour des traductions de qualité
+- Cache les traductions pour optimiser les appels API
+- S'active automatiquement si la clé API est configurée
+- Gracefully dégradé : fonctionnement normal sans traduction si API key manquante
+
+#### 3. RSS Discovery (`rss_discovery.py`) ⭐ NEW
 - Découvre automatiquement de nouveaux flux RSS intéressants
 - Teste une base de sites tech populaires (TechCrunch, VentureBeat, etc.)
 - Valide l'accessibilité des flux avant de les ajouter
@@ -53,27 +63,28 @@ veille_tech/
 - S'exécute au début de chaque run pour enrichir vos sources
 - Modes : "notification" (logs) ou "auto-add" (ajout automatique)
 
-#### 3. RSS Fetcher (`rss_fetcher.py`)
+#### 4. RSS Fetcher (`rss_fetcher.py`)
 - Récupère les flux RSS configurés
 - Gère les erreurs réseau (timeouts, 404, etc.)
 - Déduplique les articles
 - Filtre par date si configuré
 - Limite le nombre d'articles par catégorie
 
-#### 4. Content Analyzer (`content_analyzer.py`)
+#### 5. Content Analyzer (`content_analyzer.py`)
 - Groupe les articles par catégorie
 - Génère du HTML structuré et responsive
 - Extrait les informations clés (titre, lien, résumé, date)
 - Crée une table des matières
+- Intègre la traduction en français via le Translator
 
-#### 5. Email Sender (`email_sender.py`)
+#### 6. Email Sender (`email_sender.py`)
 - Génère l'HTML complète du newsletter
 - Envoie via SMTP (support Gmail, Outlook, etc.)
 - Supporte les pièces jointes
 - Gère les erreurs d'envoi
 - Design responsive et professionnel
 
-#### 6. Error Handler (`error_handler.py`)
+#### 7. Error Handler (`error_handler.py`)
 - Capture les erreurs avec contexte
 - Logging détaillé en fichier et console
 - Rotation de fichiers de log (5MB max)
@@ -94,19 +105,30 @@ cd /Users/erik/Documents/Dev/AI/Claude
 ls -la veille_tech/
 ```
 
-### 3. Créer un environnement virtuel (recommandé)
+### 3. Créer un environnement virtuel
 
 ```bash
 cd veille_tech
 python3 -m venv venv
-source venv/bin/activate  # Sur Windows: venv\Scripts\activate
 ```
 
 ### 4. Installer les dépendances
 
+L'environnement virtuel a été créé. Les dépendances sont prêtes à être installées via le script :
+
+**macOS / Linux :**
 ```bash
+source venv/bin/activate
 pip install -r requirements.txt
 ```
+
+**Windows :**
+```cmd
+venv\Scripts\activate.bat
+pip install -r requirements.txt
+```
+
+Ou plus simplement, utilisez les scripts fournis (voir la section "Utilisation" ci-dessous).
 
 ### 5. Configurer Gmail (ou autre SMTP)
 
@@ -175,7 +197,37 @@ pip install -r requirements.txt
 }
 ```
 
-### 7. Configurer la Découverte Automatique de Flux RSS ⭐
+### 7. Configurer la Traduction en Français ⭐ NEW
+
+Le système traduit automatiquement tous les résumés des articles en français en utilisant l'API Claude.
+
+#### Configuration de la clé API
+
+1. Créer un fichier `.env` à la racine du projet (ou copier depuis `.env.example`) :
+
+```bash
+cp .env.example .env
+```
+
+2. Ajouter votre clé API Claude :
+
+```
+ANTHROPIC_API_KEY=sk-your-api-key-here
+```
+
+3. La traduction s'activera automatiquement au prochain lancement
+
+#### Obtenir une clé API Claude
+
+1. Aller sur [console.anthropic.com](https://console.anthropic.com)
+2. Se connecter ou créer un compte
+3. Aller à l'onglet "API keys"
+4. Créer une nouvelle clé
+5. Copier la clé dans le fichier `.env`
+
+**Note** : Sans clé API, le système fonctionne normalement mais les résumés restent en anglais (texte original des flux RSS).
+
+### 8. Configurer la Découverte Automatique de Flux RSS ⭐
 
 La découverte automatique teste des sites tech populaires et vous propose de nouveaux flux RSS :
 
@@ -215,41 +267,59 @@ La découverte automatique teste des sites tech populaires et vous propose de no
 
 ## 📖 Utilisation
 
-### Mode normal
+⚠️ **IMPORTANT** : Toutes les exécutions doivent se faire dans l'environnement virtuel.
 
+### Scripts de lancement rapide
+
+#### macOS / Linux
 ```bash
-python main.py
+./run.sh                          # Mode normal
+./run.sh --dry-run               # Mode dry-run
+./run.sh --force                 # Mode force
+./run.sh --force --dry-run       # Combiner les options
 ```
 
-Récupère les articles depuis la dernière exécution et envoie l'email.
+#### Windows
+```cmd
+run.bat                          # Mode normal
+run.bat --dry-run               # Mode dry-run
+run.bat --force                 # Mode force
+run.bat --force --dry-run       # Combiner les options
+```
 
-### Mode dry-run (test)
+### Activation manuelle du venv
 
+Si vous préférez activer manuellement :
+
+**macOS / Linux :**
 ```bash
+source venv/bin/activate
 python main.py --dry-run
+deactivate  # Quitter l'environnement quand fini
 ```
 
-Génère le newsletter et le sauvegarde dans `newsletter_output.html` sans envoyer d'email.
-
-### Mode force
-
-```bash
-python main.py --force
+**Windows :**
+```cmd
+venv\Scripts\activate.bat
+python main.py --dry-run
+deactivate  # Quitter l'environnement quand fini
 ```
 
-Ignore la date de dernière exécution et récupère tous les articles disponibles.
+### Options disponibles
 
-### Configuration personnalisée
+- **Mode normal** : `python main.py` - Récupère les articles depuis la dernière exécution et envoie l'email (si articles trouvés)
+- **Mode dry-run** : `python main.py --dry-run` - Génère le newsletter et le sauvegarde dans `newsletter_output.html` sans envoyer d'email
+- **Mode force** : `python main.py --force` - Ignore la date de dernière exécution et récupère tous les articles disponibles
+- **Configuration personnalisée** : `python main.py --config /chemin/vers/config.json`
+- **Combiner les options** : `python main.py --force --dry-run --config custom_config.json`
 
-```bash
-python main.py --config /chemin/vers/config.json
-```
+### Logique d'envoi
 
-### Combiner les options
+⚠️ **Important** : L'email ne sera envoyé QUE s'il y a au moins un nouvel article :
+- ✅ Articles trouvés → Email envoyé avec les articles
+- ❌ Pas d'article → Email non envoyé, timestamp d'exécution mis à jour quand même
 
-```bash
-python main.py --force --dry-run --config custom_config.json
-```
+Cela évite d'envoyer des newsletters vides. Le timestamp `last_execution` est toujours mis à jour pour éviter de re-traiter les mêmes périodes.
 
 ## 📅 Programmation automatique
 
@@ -261,19 +331,27 @@ python main.py --force --dry-run --config custom_config.json
 crontab -e
 ```
 
-Ajouter une ligne pour exécuter quotidiennement à 9h :
+Ajouter une ligne pour exécuter quotidiennement à 9h (utilise le script qui gère l'activation du venv) :
 
 ```cron
-0 9 * * * cd /Users/erik/Documents/Dev/AI/Claude/veille_tech && /usr/bin/python3 main.py >> logs/cron.log 2>&1
+0 9 * * * cd /Users/erik/Documents/Dev/AI/Claude/veille_tech && ./run.sh >> logs/cron.log 2>&1
+```
+
+Ou si vous préférez contrôler l'activation manuellement :
+
+```cron
+0 9 * * * cd /Users/erik/Documents/Dev/AI/Claude/veille_tech && source venv/bin/activate && python main.py >> logs/cron.log 2>&1
 ```
 
 ### Sur Windows (Planificateur de tâches)
 
 1. Ouvrir "Planificateur de tâches"
 2. Créer une tâche basique
-3. Action : `C:\path\to\python.exe main.py`
+3. Action : `C:\path\to\veille_tech\run.bat` (ou `python.exe main.py` si vous préférez)
 4. Répertoire : `C:\path\to\veille_tech`
 5. Déclencher : Quotidiennement à 9h
+
+**Recommandé** : Utiliser `run.bat` qui gère automatiquement l'activation du venv
 
 ## 📋 Fichiers de configuration
 
@@ -461,7 +539,7 @@ Les améliorations suggérées :
 - [ ] Détection de trending topics
 - [ ] Support Slack/Discord
 - [ ] Filtrage par langage
-- [ ] Résumé avec IA (GPT, Claude, etc.)
+- [x] Résumé avec IA (Claude) - Traduction en français via Claude API
 
 ## 📝 License
 

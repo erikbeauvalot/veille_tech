@@ -1,5 +1,6 @@
-# Configuration with credentials
+# Configuration and credentials
 config.json
+.env
 
 # Logs
 logs/

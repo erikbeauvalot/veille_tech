@@ -149,6 +149,22 @@ class VeilleTechOrchestrator:
                 "ORCHESTRATOR",
             )
 
+            # Check if there are any articles to send
+            if len(articles) == 0:
+                self.error_handler.log_info(
+                    "No new articles found. Skipping email and updating last execution timestamp.",
+                    "ORCHESTRATOR",
+                )
+                # Still update last execution time even if no articles
+                self.config_manager.update_last_execution()
+                return {
+                    "status": "success",
+                    "message": "No new articles found - email not sent",
+                    "articles_count": 0,
+                    "categories_count": 0,
+                    "dry_run": self.dry_run,
+                }
+
             # Step 6: Analyze and group content
             self.error_handler.log_info("Analyzing and grouping articles...", "ORCHESTRATOR")
             content_analyzer = ContentAnalyzer()

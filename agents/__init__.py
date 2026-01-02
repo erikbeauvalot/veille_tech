@@ -8,6 +8,7 @@ from .content_analyzer import ContentAnalyzer
 from .email_sender import EmailSender
 from .error_handler import ErrorHandler
 from .rss_discovery import RSSDiscovery
+from .translator import Translator
 
 __all__ = [
     "ConfigManager",
@@ -16,4 +17,5 @@ __all__ = [
     "EmailSender",
     "ErrorHandler",
     "RSSDiscovery",
+    "Translator",
 ]
