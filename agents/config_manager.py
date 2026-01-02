@@ -168,7 +168,7 @@ class ConfigManager:
 
         # Default configs for each provider (least expensive models)
         defaults = {
-            "claude": {"model": "claude-3-haiku-20250307"},
+            "claude": {"model": "claude-3-haiku-20241022"},
             "openai": {"model": "gpt-3.5-turbo"},
         }
 
@@ -188,7 +188,7 @@ class ConfigManager:
         provider_lower = provider.lower()
 
         if provider_lower == "claude":
-            return config.get("model", "claude-3-haiku-20250307")
+            return config.get("model", "claude-3-haiku-20241022")
         elif provider_lower == "openai":
             return config.get("model", "gpt-3.5-turbo")
         else:
