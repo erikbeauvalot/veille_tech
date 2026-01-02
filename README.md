@@ -231,7 +231,7 @@ OPENAI_API_KEY=sk-your-openai-api-key-here
   "translation_provider": "Claude",
   "translation_config": {
     "claude": {
-      "model": "claude-3-haiku-20241022"
+      "model": "claude-opus-4-1-20250805"
     },
     "openai": {
       "model": "gpt-3.5-turbo"
@@ -243,7 +243,7 @@ OPENAI_API_KEY=sk-your-openai-api-key-here
 **Providers et modèles disponibles** :
 
 **Claude** (par défaut - moins cher) :
-- `claude-3-haiku-20241022` ⭐ (recommandé - moins cher)
+- `claude-opus-4-1-20250805` ⭐ (recommandé - moins cher)
 - `claude-3-sonnet-20241022` (équilibre qualité/prix)
 - `claude-3-5-sonnet-20241022` (plus puissant)
 - `claude-opus-4-1-20250805` (le plus puissant)
@@ -450,7 +450,7 @@ Structure complète :
   "translation_provider": "Claude",
   "translation_config": {
     "claude": {
-      "model": "claude-3-haiku-20241022"
+      "model": "claude-opus-4-1-20250805"
     },
     "openai": {
       "model": "gpt-3.5-turbo"
@@ -473,7 +473,7 @@ Structure complète :
 - `language_preference` : Langue pour les traductions (French, English, Spanish, etc.)
 - `translation_provider` : Fournisseur de traduction (Claude ou OpenAI)
 - `translation_config` : Configuration du modèle pour chaque provider
-  - `claude.model` : Modèle Claude à utiliser (défaut: claude-3-haiku-20241022)
+  - `claude.model` : Modèle Claude à utiliser (défaut: claude-opus-4-1-20250805)
   - `openai.model` : Modèle OpenAI à utiliser (défaut: gpt-3.5-turbo)
 - `rss_discovery` : Configuration de la découverte automatique de flux
 - `last_execution` : Timestamp de la dernière exécution (auto-updated)

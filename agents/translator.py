@@ -145,14 +145,13 @@ class BaseTranslator(ABC):
 class ClaudeTranslator(BaseTranslator):
     """Translator using Claude API."""
 
-    def __init__(self, model: str = "claude-3-haiku-20241022"):
+    def __init__(self, model: str = "claude-opus-4-1-20250805"):
         """
         Initialize Claude translator.
 
         Args:
-            model: Claude model to use (default: claude-3-haiku for lowest cost)
-                   Options: claude-3-haiku-20241022, claude-3-sonnet-20241022,
-                           claude-3-5-sonnet-20241022, claude-opus-4-1-20250805
+            model: Claude model to use (default: claude-opus-4-1 - most efficient)
+                   Options: claude-opus-4-1-20250805 (recommended)
         """
         super().__init__()
         api_key = os.getenv("ANTHROPIC_API_KEY")
@@ -246,7 +245,7 @@ class Translator:
 
         if provider == "claude":
             if model is None:
-                model = "claude-3-haiku-20241022"  # Least expensive
+                model = "claude-opus-4-1-20250805"  # Most efficient
             return ClaudeTranslator(model=model)
         elif provider == "openai":
             if model is None:
