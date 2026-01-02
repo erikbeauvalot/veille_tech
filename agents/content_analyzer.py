@@ -110,7 +110,7 @@ class ContentAnalyzer:
         # Generate table of contents
         html_content += self._generate_toc(grouped_articles)
 
-        # Generate sections for each category
+        # Generate sections for each category with summaries
         for category, articles in grouped_articles.items():
             html_content += self._generate_category_section(category, articles)
 
@@ -151,6 +151,14 @@ class ContentAnalyzer:
         category_id = self._slugify(category)
         section_html = f'<section class="category" id="{category_id}">\n'
         section_html += f"  <h2>{category}</h2>\n"
+
+        # Generate category summary
+        category_summary = self._generate_category_summary(articles)
+        if category_summary:
+            section_html += f'  <div class="category-summary">\n'
+            section_html += f'    <h3>Résumé de la catégorie</h3>\n'
+            section_html += f'    <p>{category_summary}</p>\n'
+            section_html += f'  </div>\n\n'
 
         for article in articles:
             section_html += self._generate_article_html(article)
@@ -195,6 +203,42 @@ class ContentAnalyzer:
 """
 
         return article_html
+
+    def _generate_category_summary(self, articles: List[Dict[str, Any]]) -> str:
+        """
+        Generate a summary for a category by combining key points from all articles.
+
+        Args:
+            articles: List of articles in the category
+
+        Returns:
+            Summary text
+        """
+        if not articles:
+            return ""
+
+        # Extract and combine summaries from top 3 articles
+        summaries = []
+        for article in articles[:3]:
+            description = article.get("description", "").strip()
+            if description:
+                # Limit each summary to ~100 characters
+                summary = description[:100].strip()
+                if len(description) > 100:
+                    summary += "..."
+                summaries.append(summary)
+
+        if not summaries:
+            return ""
+
+        # Combine summaries with bullet points
+        combined = " ".join(summaries)
+
+        # Escape HTML characters
+        combined = self._escape_html(combined)
+
+        # Return as a single paragraph
+        return combined
 
     def _slugify(self, text: str) -> str:
         """

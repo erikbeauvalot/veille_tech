@@ -230,6 +230,27 @@ class EmailSender:
             margin-bottom: 20px;
         }}
 
+        .category-summary {{
+            background-color: #e8eef9;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }}
+
+        .category-summary h3 {{
+            font-size: 14px;
+            color: #667eea;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }}
+
+        .category-summary p {{
+            font-size: 13px;
+            color: #555;
+            line-height: 1.5;
+        }}
+
         .article {{
             margin-bottom: 25px;
             padding: 15px;
@@ -333,6 +354,14 @@ class EmailSender:
 
             .article h3 {{
                 font-size: 15px;
+            }}
+
+            .category-summary {{
+                padding: 12px;
+            }}
+
+            .category-summary h3 {{
+                font-size: 12px;
             }}
 
             .stats {{
