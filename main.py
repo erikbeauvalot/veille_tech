@@ -214,7 +214,7 @@ class VeilleTechOrchestrator:
             else:
                 self.error_handler.log_info("Sending email...", "ORCHESTRATOR")
                 recipient = email_config.get("recipient")
-                subject = f"📰 Veille Technologique - {datetime.now().strftime('%d %B %Y')}"
+                subject = f"📰 Veille Technologique - {datetime.now().strftime('%d %B %Y à %H:%M')}"
 
                 send_result = email_sender.send_email(
                     recipient=recipient,
