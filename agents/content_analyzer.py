@@ -24,6 +24,7 @@ class ContentAnalyzer:
         self.message = ""
         self.translation_provider = provider
         self.translation_model = model
+        self.target_language = "French"  # Default target language
         try:
             self.translator = Translator.create(provider, model=model)
         except ValueError as e:
@@ -45,6 +46,9 @@ class ContentAnalyzer:
             Dict with grouped articles and analysis results
         """
         try:
+            # Store target language for use in summary generation
+            self.target_language = target_language
+
             # Translate article descriptions if translator is available
             if self.translator:
                 articles = self.translator.translate_articles(articles, target_language=target_language)
@@ -252,8 +256,12 @@ class ContentAnalyzer:
 
 Focus on business impact, trends, and actionable insights. Write for a C-level executive who needs quick understanding."""
 
+                # Generate summary in English for better quality
                 executive_summary = self.translator._translate_text_api(summary_prompt, "English")
                 if executive_summary:
+                    # Translate to target language if not English
+                    if self.target_language != "English":
+                        executive_summary = self.translator.translate_text(executive_summary, self.target_language)
                     return self._escape_html(executive_summary)
             except Exception as e:
                 # Fall back to basic summary if AI generation fails
