@@ -4,10 +4,13 @@ Système automatisé de surveillance technologique qui récupère quotidiennemen
 
 ## 🎯 Fonctionnalités
 
-- ✅ Récupération multi-sources RSS (AI, Cybersecurity, Cloud, Tech)
+- ✅ Récupération multi-sources RSS (AI, Cybersecurity, Cloud, Tech, Banque, Actualité Aérienne)
 - ✅ **Découverte automatique de nouveaux flux RSS** à chaque exécution
-- ✅ **Traduction automatique des résumés en français** via Claude API
+- ✅ **Traduction automatique des résumés en français** via Claude ou OpenAI
+- ✅ **Résumés automatiques par catégorie** avant la liste détaillée des articles
+- ✅ **Heure d'exécution dans le sujet du mail** (ex: "📰 Veille Technologique - 02 January 2026 à 10:31")
 - ✅ Génération HTML responsive et professionnelle
+- ✅ **Système de templates séparé** pour faciliter la maintenance
 - ✅ Envoi automatique par email via SMTP (Gmail, etc.)
 - ✅ Déduplication des articles
 - ✅ Filtrage par date d'exécution
@@ -28,13 +31,20 @@ veille_tech/
 │   ├── rss_discovery.py    # Découverte automatique de nouveaux flux
 │   ├── rss_fetcher.py      # Récupération des flux RSS
 │   ├── content_analyzer.py # Analyse et groupage des articles
-│   ├── translator.py       # Traduction en français via Claude API
-│   ├── email_sender.py     # Envoi des emails
+│   ├── translator.py       # Traduction en français via Claude ou OpenAI
+│   ├── email_sender.py     # Envoi des emails avec templates
 │   └── error_handler.py    # Gestion des erreurs et logs
+├── templates/              # Templates HTML pour les emails
+│   ├── newsletter.html     # Template principal du newsletter
+│   ├── error_email.html    # Template des emails d'erreur
+│   └── styles.css          # Styles CSS partagés
 ├── config.json             # Configuration (à remplir)
+├── config.json.example     # Example de configuration complète
 ├── .env.example            # Template pour les variables d'environnement
 ├── logs/                   # Fichiers de log
 ├── requirements.txt        # Dépendances Python
+├── run.sh                  # Script de lancement (macOS/Linux)
+├── run.bat                 # Script de lancement (Windows)
 └── README.md              # Ce fichier
 ```
 
@@ -72,17 +82,21 @@ veille_tech/
 
 #### 5. Content Analyzer (`content_analyzer.py`)
 - Groupe les articles par catégorie
+- **Génère des résumés automatiques pour chaque catégorie** (combine les points clés des top 3 articles)
 - Génère du HTML structuré et responsive
 - Extrait les informations clés (titre, lien, résumé, date)
 - Crée une table des matières
 - Intègre la traduction en français via le Translator
 
 #### 6. Email Sender (`email_sender.py`)
-- Génère l'HTML complète du newsletter
+- **Utilise des templates HTML séparés** pour générer les newsletters et emails d'erreur
+- Charge les templates depuis le répertoire `templates/`
+- Intègre les styles CSS dynamiquement
 - Envoie via SMTP (support Gmail, Outlook, etc.)
 - Supporte les pièces jointes
 - Gère les erreurs d'envoi
 - Design responsive et professionnel
+- Fallback minimal si les templates ne peuvent pas être chargés
 
 #### 7. Error Handler (`error_handler.py`)
 - Capture les erreurs avec contexte
@@ -546,6 +560,64 @@ tail -50 logs/veille_tech.log
 # Suivre les logs en temps réel
 tail -f logs/veille_tech.log
 ```
+
+## 🎨 Système de Templates
+
+### Architecture
+
+Le système utilise des fichiers template séparés pour faciliter la maintenance et la personnalisation des emails :
+
+```
+templates/
+├── newsletter.html    # Template du newsletter principal
+├── error_email.html   # Template des emails d'erreur
+└── styles.css         # Feuille de styles partagée
+```
+
+### Personnalisation
+
+#### Modifier le style des emails
+
+Éditer `templates/styles.css` pour :
+- Changer les couleurs (variables utilisées : #667eea pour la couleur primaire)
+- Modifier les espacements et typographies
+- Adapter le design au branding
+
+#### Modifier la structure du newsletter
+
+Éditer `templates/newsletter.html` :
+- Ajouter/retirer des sections
+- Modifier l'ordre des éléments
+- Personnaliser le header et footer
+
+**Placeholders disponibles** :
+- `{styles}` - CSS injecté automatiquement
+- `{date}` - Date d'exécution
+- `{articles}` - Contenu groupé des articles
+- `{total_articles}` - Nombre total d'articles
+- `{total_categories}` - Nombre de catégories
+- `{generated_time}` - Timestamp de génération (format: JJ/MM/YYYY à HH:MM)
+
+#### Modifier les emails d'erreur
+
+Éditer `templates/error_email.html` :
+- Personnaliser le message d'erreur
+- Modifier le format du rapport d'erreur
+
+**Placeholders disponibles** :
+- `{agent_name}` - Nom de l'agent en erreur
+- `{error_type}` - Type d'erreur
+- `{error_message}` - Message d'erreur
+- `{stack_trace}` - Stack trace complète
+- `{timestamp}` - Timestamp de l'erreur
+
+### Avantages du système de templates
+
+- ✅ **Séparation des préoccupations** : HTML séparé du code Python
+- ✅ **Facilité de maintenance** : Modifier le design sans toucher au code
+- ✅ **Réutilisabilité** : Accès simple aux templates pour d'autres projets
+- ✅ **Robustesse** : Fallback automatique en cas d'erreur de chargement
+- ✅ **Professionnalisme** : Gestion centralisée des emails
 
 ## 📝 Ajouter des flux RSS personnalisés
 
