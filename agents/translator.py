@@ -1,19 +1,18 @@
 """
-Translator Agent - Translates article summaries using Claude API
+Translator Agent - Translates article summaries using Claude or OpenAI API
 """
 
 import os
-import re
 from typing import List, Dict, Any
-from anthropic import Anthropic
+from abc import ABC, abstractmethod
 from langdetect import detect, DetectorFactory
 
 # Set seed for consistency in language detection
 DetectorFactory.seed = 0
 
 
-class Translator:
-    """Translates content to specified language using Claude API."""
+class BaseTranslator(ABC):
+    """Base class for translation providers."""
 
     # Language code mappings
     LANGUAGE_CODES = {
@@ -30,13 +29,13 @@ class Translator:
     }
 
     def __init__(self):
-        """Initialize the Translator with Claude API client."""
-        api_key = os.getenv("ANTHROPIC_API_KEY")
-        if not api_key:
-            raise ValueError("ANTHROPIC_API_KEY environment variable not set")
-
-        self.client = Anthropic()
+        """Initialize the translator."""
         self.cache = {}
+
+    @abstractmethod
+    def _translate_text_api(self, text: str, target_language: str) -> str:
+        """Translate text using the API provider."""
+        pass
 
     def _detect_language(self, text: str) -> str:
         """
@@ -96,23 +95,7 @@ class Translator:
             return self.cache[cache_key]
 
         try:
-            message = self.client.messages.create(
-                model="claude-opus-4-5-20251101",
-                max_tokens=500,
-                messages=[
-                    {
-                        "role": "user",
-                        "content": f"""Translate the following text to {target_language}.
-Keep the translation concise and maintain the original meaning.
-Return ONLY the translated text, nothing else.
-
-Original text:
-{text}"""
-                    }
-                ]
-            )
-
-            translated = message.content[0].text.strip()
+            translated = self._translate_text_api(text, target_language)
             self.cache[cache_key] = translated
             return translated
 
@@ -157,3 +140,98 @@ Original text:
     def clear_cache(self):
         """Clear translation cache."""
         self.cache = {}
+
+
+class ClaudeTranslator(BaseTranslator):
+    """Translator using Claude API."""
+
+    def __init__(self):
+        """Initialize Claude translator."""
+        super().__init__()
+        api_key = os.getenv("ANTHROPIC_API_KEY")
+        if not api_key:
+            raise ValueError("ANTHROPIC_API_KEY environment variable not set")
+
+        from anthropic import Anthropic
+        self.client = Anthropic()
+
+    def _translate_text_api(self, text: str, target_language: str) -> str:
+        """Translate text using Claude API."""
+        message = self.client.messages.create(
+            model="claude-opus-4-5-20251101",
+            max_tokens=500,
+            messages=[
+                {
+                    "role": "user",
+                    "content": f"""Translate the following text to {target_language}.
+Keep the translation concise and maintain the original meaning.
+Return ONLY the translated text, nothing else.
+
+Original text:
+{text}"""
+                }
+            ]
+        )
+        return message.content[0].text.strip()
+
+
+class OpenAITranslator(BaseTranslator):
+    """Translator using OpenAI API."""
+
+    def __init__(self):
+        """Initialize OpenAI translator."""
+        super().__init__()
+        api_key = os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            raise ValueError("OPENAI_API_KEY environment variable not set")
+
+        from openai import OpenAI
+        self.client = OpenAI(api_key=api_key)
+
+    def _translate_text_api(self, text: str, target_language: str) -> str:
+        """Translate text using OpenAI API."""
+        response = self.client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {
+                    "role": "system",
+                    "content": f"You are a translator. Translate text to {target_language}. Return ONLY the translated text, nothing else."
+                },
+                {
+                    "role": "user",
+                    "content": text
+                }
+            ],
+            max_tokens=500,
+        )
+        return response.choices[0].message.content.strip()
+
+
+class Translator:
+    """Factory class for creating the appropriate translator."""
+
+    @staticmethod
+    def create(provider: str = "Claude") -> BaseTranslator:
+        """
+        Create a translator instance based on the provider.
+
+        Args:
+            provider: Translation provider ("Claude" or "OpenAI")
+
+        Returns:
+            Translator instance
+
+        Raises:
+            ValueError: If provider is not supported
+        """
+        provider = provider.lower().strip()
+
+        if provider == "claude":
+            return ClaudeTranslator()
+        elif provider == "openai":
+            return OpenAITranslator()
+        else:
+            raise ValueError(
+                f"Unsupported translation provider: {provider}. "
+                "Choose 'Claude' or 'OpenAI'."
+            )

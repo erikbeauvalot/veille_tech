@@ -144,6 +144,15 @@ class ConfigManager:
         """
         return self.config.get("language_preference", "French")
 
+    def get_translation_provider(self) -> str:
+        """
+        Get the translation provider (Claude or OpenAI).
+
+        Returns:
+            Provider name (e.g., 'Claude', 'OpenAI')
+        """
+        return self.config.get("translation_provider", "Claude")
+
     def update_last_execution(self) -> Dict[str, str]:
         """
         Update the last execution timestamp.

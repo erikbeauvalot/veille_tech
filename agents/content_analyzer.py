@@ -11,16 +11,23 @@ from .translator import Translator
 class ContentAnalyzer:
     """Analyzes content and groups articles by category."""
 
-    def __init__(self):
-        """Initialize the Content Analyzer."""
+    def __init__(self, provider: str = "Claude"):
+        """
+        Initialize the Content Analyzer.
+
+        Args:
+            provider: Translation provider ("Claude" or "OpenAI")
+        """
         self.grouped_articles: Dict[str, List[Dict[str, Any]]] = {}
         self.status = "not_analyzed"
         self.message = ""
+        self.translation_provider = provider
         try:
-            self.translator = Translator()
-        except ValueError:
-            # If API key not set, translator will be None
+            self.translator = Translator.create(provider)
+        except ValueError as e:
+            # If API key not set or invalid provider, translator will be None
             self.translator = None
+            print(f"Translation disabled: {str(e)}")
 
     def analyze_and_group(
         self, articles: List[Dict[str, Any]], target_language: str = "French"

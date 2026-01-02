@@ -197,11 +197,11 @@ Ou plus simplement, utilisez les scripts fournis (voir la section "Utilisation" 
 }
 ```
 
-### 7. Configurer la Traduction multilingue ⭐ NEW
+### 7. Configurer la Traduction multilingue ⭐ UPDATED
 
-Le système traduit automatiquement tous les résumés des articles dans la langue de votre choix en utilisant l'API Claude.
+Le système traduit automatiquement tous les résumés des articles dans la langue de votre choix en utilisant **Claude ou OpenAI**.
 
-#### Configuration de la clé API
+#### Configuration des clés API
 
 1. Créer un fichier `.env` à la racine du projet (ou copier depuis `.env.example`) :
 
@@ -209,25 +209,37 @@ Le système traduit automatiquement tous les résumés des articles dans la lang
 cp .env.example .env
 ```
 
-2. Ajouter votre clé API Claude :
+2. Ajouter vos clés API (au moins une) :
 
-```
-ANTHROPIC_API_KEY=sk-your-api-key-here
+```env
+# Pour Claude
+ANTHROPIC_API_KEY=sk-ant-your-api-key-here
+
+# Pour OpenAI
+OPENAI_API_KEY=sk-your-openai-api-key-here
 ```
 
 3. La traduction s'activera automatiquement au prochain lancement
 
-#### Obtenir une clé API Claude
+#### Choisir le provider de traduction
 
-1. Aller sur [console.anthropic.com](https://console.anthropic.com)
-2. Se connecter ou créer un compte
-3. Aller à l'onglet "API keys"
-4. Créer une nouvelle clé
-5. Copier la clé dans le fichier `.env`
+Éditer `config.json` et modifier les champs `translation_provider` et `language_preference` :
+
+```json
+{
+  "language_preference": "French",
+  "translation_provider": "Claude",
+  ...
+}
+```
+
+**Providers disponibles** :
+- `Claude` (par défaut) - Utilise Claude Opus 4.5
+- `OpenAI` - Utilise GPT-3.5-turbo
 
 #### Choisir la langue de traduction
 
-Éditer `config.json` et modifier le champ `language_preference` :
+Le champ `language_preference` dans `config.json` :
 
 ```json
 {
@@ -248,12 +260,25 @@ ANTHROPIC_API_KEY=sk-your-api-key-here
 - `Chinese` (Chinois)
 - `Japanese` (Japonais)
 
+#### Obtenir vos clés API
+
+**Claude** :
+1. Aller sur [console.anthropic.com](https://console.anthropic.com)
+2. Aller à l'onglet "API Keys"
+3. Créer une nouvelle clé
+4. Copier dans `.env`
+
+**OpenAI** :
+1. Aller sur [platform.openai.com](https://platform.openai.com/api-keys)
+2. Créer une nouvelle clé
+3. Copier dans `.env`
+
 **Comportement intelligent** :
-- ✅ Si les articles sont déjà dans la langue choisie → Pas de traduction (évite les appels API inutiles)
+- ✅ Si les articles sont déjà dans la langue choisie → Pas de traduction (économie API)
 - ✅ Si articles dans autre langue → Traduction automatique
 - ✅ Cache des traductions pour optimiser les appels API
 
-**Note** : Sans clé API, le système fonctionne normalement mais les résumés restent en anglais (texte original des flux RSS).
+**Note** : Sans clé API du provider configuré, le système fonctionne normalement mais les résumés restent en anglais (texte original des flux RSS).
 
 ### 8. Configurer la Découverte Automatique de Flux RSS ⭐
 
@@ -405,6 +430,7 @@ Structure complète :
   ],
   "max_articles_per_feed": 5,
   "language_preference": "French",
+  "translation_provider": "Claude",
   "rss_discovery": {
     "enabled": true,
     "max_new_feeds_per_run": 2,
@@ -420,6 +446,7 @@ Structure complète :
 - `rss_feeds` : Liste des flux RSS à surveiller
 - `max_articles_per_feed` : Nombre max d'articles par catégorie
 - `language_preference` : Langue pour les traductions (French, English, Spanish, etc.)
+- `translation_provider` : Fournisseur de traduction (Claude ou OpenAI)
 - `rss_discovery` : Configuration de la découverte automatique de flux
 - `last_execution` : Timestamp de la dernière exécution (auto-updated)
 
