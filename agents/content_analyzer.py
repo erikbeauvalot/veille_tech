@@ -206,39 +206,71 @@ class ContentAnalyzer:
 
     def _generate_category_summary(self, articles: List[Dict[str, Any]]) -> str:
         """
-        Generate a summary for a category by combining key points from all articles.
+        Generate an executive-friendly summary for a category.
+
+        Combines key information from top articles using AI if translator is available.
 
         Args:
             articles: List of articles in the category
 
         Returns:
-            Summary text
+            Executive summary text
         """
         if not articles:
             return ""
 
-        # Extract and combine summaries from top 3 articles
-        summaries = []
+        # Collect key information from top 3 articles
+        article_info = []
         for article in articles[:3]:
+            title = article.get("title", "").strip()
             description = article.get("description", "").strip()
-            if description:
-                # Limit each summary to ~100 characters
-                summary = description[:100].strip()
-                if len(description) > 100:
-                    summary += "..."
-                summaries.append(summary)
 
-        if not summaries:
+            # Build article summary: title + description
+            if title and description:
+                # Get first 150 characters of description for context
+                desc_excerpt = description[:150].strip()
+                if len(description) > 150:
+                    desc_excerpt += "..."
+                article_info.append(f"{title}: {desc_excerpt}")
+            elif title:
+                article_info.append(title)
+            elif description:
+                article_info.append(description[:200])
+
+        if not article_info:
             return ""
 
-        # Combine summaries with bullet points
-        combined = " ".join(summaries)
+        # Create a comprehensive summary prompt
+        articles_text = " | ".join(article_info)
 
-        # Escape HTML characters
-        combined = self._escape_html(combined)
+        # If translator is available, use AI to generate executive summary
+        if self.translator:
+            try:
+                summary_prompt = f"""Create a concise executive summary (2-3 sentences max) that captures the key trends and insights from these recent articles:
 
-        # Return as a single paragraph
-        return combined
+{articles_text}
+
+Focus on business impact, trends, and actionable insights. Write for a C-level executive who needs quick understanding."""
+
+                executive_summary = self.translator._translate_text_api(summary_prompt, "English")
+                if executive_summary:
+                    return self._escape_html(executive_summary)
+            except Exception as e:
+                # Fall back to basic summary if AI generation fails
+                pass
+
+        # Fallback: Generate a simple summary from article titles
+        titles = []
+        for article in articles[:3]:
+            title = article.get("title", "").strip()
+            if title:
+                titles.append(title)
+
+        if titles:
+            summary = "Key developments: " + " • ".join(titles[:2])
+            return self._escape_html(summary[:300])
+
+        return ""
 
     def _slugify(self, text: str) -> str:
         """
