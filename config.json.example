@@ -1,0 +1,118 @@
+{
+  "email": {
+    "recipient": "your-email@example.com",
+    "smtp_server": "smtp.gmail.com",
+    "smtp_port": 587,
+    "sender_email": "your-gmail@gmail.com",
+    "sender_password": "your-app-password-here"
+  },
+  "categories": {
+    "AI": {
+      "description": "Artificial Intelligence, Machine Learning, Large Language Models",
+      "keywords": ["artificial intelligence", "machine learning", "AI", "LLM", "neural network", "deep learning", "NLP", "computer vision", "GPT", "Claude", "Gemini"]
+    },
+    "Cybersecurity": {
+      "description": "Security, Hacking, Vulnerabilities, Data Protection",
+      "keywords": ["cybersecurity", "security", "hacking", "vulnerability", "exploit", "breach", "malware", "ransomware", "threat", "infosec", "encryption"]
+    },
+    "Cloud": {
+      "description": "Cloud Computing, Infrastructure, DevOps, Containerization",
+      "keywords": ["cloud computing", "AWS", "Azure", "Google Cloud", "DevOps", "Kubernetes", "Docker", "serverless", "infrastructure", "deployment"]
+    },
+    "Tech": {
+      "description": "General Technology, Gadgets, Electronics, Innovation",
+      "keywords": ["technology", "gadgets", "electronics", "innovation", "startup", "product", "hardware", "software", "app", "mobile"]
+    },
+    "Dev": {
+      "description": "Software Development, Programming, Web Development",
+      "keywords": ["development", "programming", "code", "developer", "web development", "framework", "library", "API", "database", "backend"]
+    },
+    "Banque": {
+      "description": "Finance, Banking, Stock Market, Economic News",
+      "keywords": ["banque", "finance", "bourse", "économie", "marché financier", "investissement", "crypto", "trading", "assurance", "crédit"]
+    },
+    "Actualité Aérienne": {
+      "description": "Aviation, Aerospace, Airlines, Aeronautical News",
+      "keywords": ["aviation", "aéronautique", "airline", "aéroport", "avion", "hélicoptère", "aerospace", "vol", "aviation civile"]
+    }
+  },
+  "rss_feeds": [
+    {
+      "name": "TechCrunch AI",
+      "url": "https://techcrunch.com/category/artificial-intelligence/feed/",
+      "category": "AI"
+    },
+    {
+      "name": "MIT Technology Review AI",
+      "url": "https://www.technologyreview.com/topic/artificial-intelligence/feed",
+      "category": "AI"
+    },
+    {
+      "name": "The Hacker News",
+      "url": "https://feeds.feedburner.com/TheHackersNews",
+      "category": "Cybersecurity"
+    },
+    {
+      "name": "Krebs on Security",
+      "url": "https://krebsonsecurity.com/feed/",
+      "category": "Cybersecurity"
+    },
+    {
+      "name": "AWS News",
+      "url": "https://aws.amazon.com/blogs/aws/feed/",
+      "category": "Cloud"
+    },
+    {
+      "name": "Google Cloud Blog",
+      "url": "https://cloudblog.withgoogle.com/rss/",
+      "category": "Cloud"
+    },
+    {
+      "name": "Ars Technica",
+      "url": "https://feeds.arstechnica.com/arstechnica/index",
+      "category": "Tech"
+    },
+    {
+      "name": "The Verge",
+      "url": "https://www.theverge.com/rss/index.xml",
+      "category": "Tech"
+    },
+    {
+      "name": "DEV Community",
+      "url": "https://dev.to/feed",
+      "category": "Dev"
+    },
+    {
+      "name": "HackerNoon",
+      "url": "https://hackernoon.com/feed",
+      "category": "Dev"
+    },
+    {
+      "name": "Les Échos",
+      "url": "https://feeds.feedburner.com/lesechos/BrFLB6ZLde7",
+      "category": "Banque"
+    },
+    {
+      "name": "Air Journal",
+      "url": "https://www.air-journal.fr/feed/",
+      "category": "Actualité Aérienne"
+    }
+  ],
+  "max_articles_per_feed": 10,
+  "language_preference": "French",
+  "translation_provider": "openai",
+  "translation_config": {
+    "claude": {
+      "model": "claude-opus-4-1-20250805"
+    },
+    "openai": {
+      "model": "gpt-4.1-nano"
+    }
+  },
+  "rss_discovery": {
+    "enabled": true,
+    "max_new_feeds_per_run": 2,
+    "validate_feeds": true,
+    "auto_add_feeds": false
+  }
+}

@@ -468,6 +468,11 @@ Structure complète :
 
 **Champs** :
 - `email` : Configuration SMTP pour l'envoi d'emails
+- `categories` : Définition des catégories avec mots-clés pour la recherche de nouvelles sources RSS
+  - Chaque catégorie contient :
+    - `description` : Description de la catégorie
+    - `keywords` : Liste de mots-clés utilisés pour découvrir automatiquement de nouveaux flux
+  - Catégories disponibles : AI, Cybersecurity, Cloud, Tech, Dev, Banque, Actualité Aérienne
 - `rss_feeds` : Liste des flux RSS à surveiller
 - `max_articles_per_feed` : Nombre max d'articles par catégorie
 - `language_preference` : Langue pour les traductions (French, English, Spanish, etc.)
@@ -540,6 +545,51 @@ tail -50 logs/veille_tech.log
 
 # Suivre les logs en temps réel
 tail -f logs/veille_tech.log
+```
+
+## 📝 Ajouter des flux RSS personnalisés
+
+### Utiliser les catégories pour trouver de nouvelles sources
+
+La section `categories` dans `config.json` contient les mots-clés pour chaque catégorie. Utilisez ces mots-clés pour rechercher de nouveaux flux RSS :
+
+1. **Ouvrez le fichier `config.json`**
+2. **Trouvez la catégorie qui vous intéresse** et notez les mots-clés
+3. **Recherchez sur Google** : `[keyword] RSS feed` (ex: "machine learning RSS feed")
+4. **Testez l'URL** du flux RSS en la copiant dans un lecteur RSS ou navigateur
+5. **Ajoutez le flux** à la liste `rss_feeds` en respectant le format :
+
+```json
+{
+  "name": "Nom du flux",
+  "url": "https://example.com/feed/",
+  "category": "Catégorie correspondante"
+}
+```
+
+### Catégories disponibles et leurs mots-clés
+
+| Catégorie | Description | Mots-clés |
+|-----------|-------------|-----------|
+| **AI** | Intelligence artificielle | machine learning, AI, LLM, neural network, deep learning, NLP, computer vision |
+| **Cybersecurity** | Sécurité informatique | cybersecurity, hacking, vulnerability, exploit, breach, malware, ransomware |
+| **Cloud** | Cloud computing | cloud computing, AWS, Azure, DevOps, Kubernetes, Docker, serverless |
+| **Tech** | Technologie générale | technology, gadgets, electronics, innovation, startup, product, hardware |
+| **Dev** | Développement logiciel | development, programming, code, developer, web development, framework |
+| **Banque** | Finance et bancaire | banque, finance, bourse, économie, investissement, crypto, trading |
+| **Actualité Aérienne** | Aviation et aéronautique | aviation, aéronautique, airline, aéroport, avion, aerospace |
+
+### Mode de découverte automatique
+
+Le système peut découvrir et ajouter automatiquement de nouveaux flux RSS. Configurez dans `config.json` :
+
+```json
+"rss_discovery": {
+  "enabled": true,           // Activer la découverte automatique
+  "max_new_feeds_per_run": 2, // Max 2 nouveaux flux par exécution
+  "validate_feeds": true,    // Valider les flux découverts
+  "auto_add_feeds": true     // Ajouter automatiquement (false = notification seule)
+}
 ```
 
 ## 📚 Sources RSS suggérées
