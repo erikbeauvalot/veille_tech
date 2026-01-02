@@ -4,6 +4,7 @@ Email Sender Agent - Sends HTML emails with newsletter content via SMTP
 
 import smtplib
 import os
+from pathlib import Path
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
@@ -19,6 +20,7 @@ class EmailSender:
         """Initialize the Email Sender."""
         self.status = "not_sent"
         self.message = ""
+        self.template_dir = Path(__file__).parent.parent / "templates"
 
     def send_email(
         self,
@@ -92,6 +94,34 @@ class EmailSender:
             self.message = f"Error sending email: {str(e)}"
             return {"status": self.status, "message": self.message}
 
+    def _load_template(self, filename: str) -> str:
+        """
+        Load a template file from the templates directory.
+
+        Args:
+            filename: Name of the template file
+
+        Returns:
+            Template content as string
+        """
+        template_path = self.template_dir / filename
+        try:
+            with open(template_path, "r", encoding="utf-8") as f:
+                return f.read()
+        except FileNotFoundError:
+            raise FileNotFoundError(f"Template file not found: {template_path}")
+        except Exception as e:
+            raise Exception(f"Error loading template {filename}: {str(e)}")
+
+    def _load_styles(self) -> str:
+        """
+        Load CSS styles from the styles template file.
+
+        Returns:
+            CSS content as string
+        """
+        return self._load_template("styles.css")
+
     def _attach_file(self, message: MIMEMultipart, file_path: str) -> None:
         """
         Attach a file to the email message.
@@ -124,7 +154,7 @@ class EmailSender:
         include_date: bool = True,
     ) -> str:
         """
-        Generate complete HTML email with header, footer, and content.
+        Generate complete HTML email with header, footer, and content using templates.
 
         Args:
             articles_html: HTML content of articles
@@ -134,273 +164,43 @@ class EmailSender:
         Returns:
             Complete HTML email
         """
-        today = datetime.now().strftime("%d %B %Y")
-        total_articles = stats.get("total_articles", 0)
-        total_categories = stats.get("total_categories", 0)
+        try:
+            # Load template and styles
+            template = self._load_template("newsletter.html")
+            styles = self._load_styles()
 
-        html = f"""<!DOCTYPE html>
+            # Prepare values
+            today = datetime.now().strftime("%d %B %Y")
+            generated_time = datetime.now().strftime("%d/%m/%Y à %H:%M")
+            total_articles = stats.get("total_articles", 0)
+            total_categories = stats.get("total_categories", 0)
+            date_display = today if include_date else ""
+
+            # Replace placeholders in template
+            html = template.format(
+                styles=styles,
+                date=date_display,
+                articles=articles_html,
+                total_articles=total_articles,
+                total_categories=total_categories,
+                generated_time=generated_time,
+            )
+
+            return html
+
+        except Exception as e:
+            # Fallback to a minimal HTML if template loading fails
+            return f"""<!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Veille Technologique</title>
-    <style>
-        * {{
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }}
-
-        body {{
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            background-color: #f5f5f5;
-        }}
-
-        .container {{
-            max-width: 800px;
-            margin: 0 auto;
-            background-color: white;
-        }}
-
-        .header {{
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 40px 20px;
-            text-align: center;
-        }}
-
-        .header h1 {{
-            font-size: 28px;
-            margin-bottom: 10px;
-        }}
-
-        .header .date {{
-            font-size: 14px;
-            opacity: 0.9;
-        }}
-
-        .content {{
-            padding: 30px 20px;
-        }}
-
-        .toc {{
-            background-color: #f9f9f9;
-            border-left: 4px solid #667eea;
-            padding: 20px;
-            margin-bottom: 30px;
-            border-radius: 4px;
-        }}
-
-        .toc h2 {{
-            font-size: 16px;
-            margin-bottom: 15px;
-            color: #667eea;
-        }}
-
-        .toc ul {{
-            list-style: none;
-            padding-left: 0;
-        }}
-
-        .toc li {{
-            margin-bottom: 8px;
-        }}
-
-        .toc a {{
-            color: #667eea;
-            text-decoration: none;
-            font-size: 14px;
-        }}
-
-        .toc a:hover {{
-            text-decoration: underline;
-        }}
-
-        .category {{
-            margin-bottom: 40px;
-        }}
-
-        .category h2 {{
-            font-size: 22px;
-            color: #333;
-            border-bottom: 2px solid #667eea;
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-        }}
-
-        .category-summary {{
-            background-color: #e8eef9;
-            border-left: 4px solid #667eea;
-            padding: 15px;
-            margin-bottom: 20px;
-            border-radius: 4px;
-        }}
-
-        .category-summary h3 {{
-            font-size: 14px;
-            color: #667eea;
-            margin-bottom: 10px;
-            font-weight: 600;
-        }}
-
-        .category-summary p {{
-            font-size: 13px;
-            color: #555;
-            line-height: 1.5;
-        }}
-
-        .article {{
-            margin-bottom: 25px;
-            padding: 15px;
-            background-color: #fafafa;
-            border-radius: 4px;
-            border-left: 3px solid #667eea;
-        }}
-
-        .article h3 {{
-            font-size: 16px;
-            margin-bottom: 10px;
-        }}
-
-        .article h3 a {{
-            color: #667eea;
-            text-decoration: none;
-        }}
-
-        .article h3 a:hover {{
-            text-decoration: underline;
-        }}
-
-        .article-meta {{
-            font-size: 12px;
-            color: #999;
-            margin-bottom: 10px;
-            display: flex;
-            gap: 15px;
-        }}
-
-        .source {{
-            font-weight: 500;
-            color: #667eea;
-        }}
-
-        .description {{
-            font-size: 14px;
-            color: #555;
-            margin-bottom: 10px;
-            line-height: 1.5;
-        }}
-
-        .read-more {{
-            display: inline-block;
-            color: #667eea;
-            text-decoration: none;
-            font-size: 13px;
-            font-weight: 500;
-        }}
-
-        .read-more:hover {{
-            text-decoration: underline;
-        }}
-
-        .footer {{
-            background-color: #f9f9f9;
-            border-top: 1px solid #e0e0e0;
-            padding: 20px;
-            text-align: center;
-            font-size: 12px;
-            color: #999;
-        }}
-
-        .stats {{
-            display: flex;
-            gap: 20px;
-            justify-content: center;
-            margin-bottom: 15px;
-            font-size: 13px;
-        }}
-
-        .stat {{
-            background-color: white;
-            padding: 10px 15px;
-            border-radius: 4px;
-            border: 1px solid #e0e0e0;
-        }}
-
-        .stat-value {{
-            font-weight: bold;
-            color: #667eea;
-            font-size: 16px;
-        }}
-
-        @media (max-width: 600px) {{
-            .header {{
-                padding: 30px 15px;
-            }}
-
-            .header h1 {{
-                font-size: 24px;
-            }}
-
-            .content {{
-                padding: 20px 15px;
-            }}
-
-            .article {{
-                padding: 12px;
-            }}
-
-            .article h3 {{
-                font-size: 15px;
-            }}
-
-            .category-summary {{
-                padding: 12px;
-            }}
-
-            .category-summary h3 {{
-                font-size: 12px;
-            }}
-
-            .stats {{
-                flex-direction: column;
-                gap: 10px;
-            }}
-        }}
-    </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>📰 Veille Technologique</h1>
-            <div class="date">{today if include_date else ''}</div>
-        </div>
-
-        <div class="content">
-            {articles_html}
-        </div>
-
-        <div class="footer">
-            <div class="stats">
-                <div class="stat">
-                    <div class="stat-value">{total_articles}</div>
-                    <div>articles</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-value">{total_categories}</div>
-                    <div>catégories</div>
-                </div>
-            </div>
-            <p>Veille technologique automatisée</p>
-            <p style="margin-top: 10px;">Générée le {datetime.now().strftime('%d/%m/%Y à %H:%M')}</p>
-        </div>
-    </div>
+    <p>Erreur lors de la génération du template: {str(e)}</p>
+    <div>{articles_html}</div>
 </body>
 </html>"""
-
-        return html
 
     def send_error_email(
         self,
@@ -413,7 +213,7 @@ class EmailSender:
         log_attachment: Optional[str] = None,
     ) -> Dict[str, str]:
         """
-        Send an error notification email.
+        Send an error notification email using template.
 
         Args:
             recipient: Recipient email address
@@ -427,111 +227,33 @@ class EmailSender:
         Returns:
             Dict with 'status' and 'message'
         """
-        timestamp = datetime.now().strftime("%d/%m/%Y à %H:%M:%S")
+        try:
+            timestamp = datetime.now().strftime("%d/%m/%Y à %H:%M:%S")
 
-        html_content = f"""<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Erreur Veille Tech</title>
-    <style>
-        body {{
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            line-height: 1.6;
-            color: #333;
-        }}
-        .container {{
-            max-width: 600px;
-            margin: 20px auto;
-            background-color: white;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }}
-        .header {{
-            background-color: #dc3545;
-            color: white;
-            padding: 20px;
-            text-align: center;
-        }}
-        .content {{
-            padding: 20px;
-        }}
-        .details {{
-            background-color: #f9f9f9;
-            padding: 15px;
-            border-radius: 4px;
-            margin-bottom: 20px;
-        }}
-        .details dt {{
-            font-weight: bold;
-            color: #333;
-            margin-top: 10px;
-        }}
-        .details dd {{
-            margin-left: 0;
-            color: #666;
-            margin-bottom: 10px;
-        }}
-        .stacktrace {{
-            background-color: #f0f0f0;
-            padding: 10px;
-            border-radius: 4px;
-            font-family: monospace;
-            font-size: 12px;
-            overflow-x: auto;
-            margin-bottom: 20px;
-        }}
-        .footer {{
-            text-align: center;
-            padding: 10px;
-            border-top: 1px solid #ddd;
-            font-size: 12px;
-            color: #999;
-        }}
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>⚠️ Erreur Veille Technologique</h1>
-        </div>
-        <div class="content">
-            <p>Bonjour,</p>
-            <p>Une erreur s'est produite lors de l'exécution de la veille technologique.</p>
+            # Load template and replace placeholders
+            template = self._load_template("error_email.html")
+            html_content = template.format(
+                agent_name=self._escape_html(agent_name),
+                error_type=self._escape_html(error_type),
+                error_message=self._escape_html(error_message),
+                stack_trace=self._escape_html(stack_trace),
+                timestamp=timestamp,
+            )
 
-            <div class="details">
-                <dl>
-                    <dt>Agent:</dt>
-                    <dd>{agent_name}</dd>
-                    <dt>Type d'erreur:</dt>
-                    <dd>{error_type}</dd>
-                    <dt>Message:</dt>
-                    <dd>{error_message}</dd>
-                    <dt>Timestamp:</dt>
-                    <dd>{timestamp}</dd>
-                </dl>
-            </div>
+            subject = f"⚠️ Erreur Veille Tech - {timestamp}"
 
-            <h3>Stack Trace:</h3>
-            <div class="stacktrace">{self._escape_html(stack_trace)}</div>
+            attachments = []
+            if log_attachment:
+                attachments.append(log_attachment)
 
-            <p>Veuillez consulter les logs en pièce jointe pour plus de détails.</p>
-        </div>
-        <div class="footer">
-            <p>Email généré automatiquement par le système de veille</p>
-        </div>
-    </div>
-</body>
-</html>"""
+            return self.send_email(recipient, subject, html_content, email_config, attachments)
 
-        subject = f"⚠️ Erreur Veille Tech - {timestamp}"
-
-        attachments = []
-        if log_attachment:
-            attachments.append(log_attachment)
-
-        return self.send_email(recipient, subject, html_content, email_config, attachments)
+        except Exception as e:
+            # Fallback to simple error response if template loading fails
+            return {
+                "status": "error",
+                "message": f"Error sending error email: {str(e)}"
+            }
 
     def _escape_html(self, text: str) -> str:
         """Escape HTML special characters."""

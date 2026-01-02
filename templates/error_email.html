@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Erreur Veille Tech</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .header {
+            background-color: #dc3545;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .content {
+            padding: 20px;
+        }
+        .details {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        .details dt {
+            font-weight: bold;
+            color: #333;
+            margin-top: 10px;
+        }
+        .details dd {
+            margin-left: 0;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        .stacktrace {
+            background-color: #f0f0f0;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            overflow-x: auto;
+            margin-bottom: 20px;
+        }
+        .footer {
+            text-align: center;
+            padding: 10px;
+            border-top: 1px solid #ddd;
+            font-size: 12px;
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚠️ Erreur Veille Technologique</h1>
+        </div>
+        <div class="content">
+            <p>Bonjour,</p>
+            <p>Une erreur s'est produite lors de l'exécution de la veille technologique.</p>
+
+            <div class="details">
+                <dl>
+                    <dt>Agent:</dt>
+                    <dd>{agent_name}</dd>
+                    <dt>Type d'erreur:</dt>
+                    <dd>{error_type}</dd>
+                    <dt>Message:</dt>
+                    <dd>{error_message}</dd>
+                    <dt>Timestamp:</dt>
+                    <dd>{timestamp}</dd>
+                </dl>
+            </div>
+
+            <h3>Stack Trace:</h3>
+            <div class="stacktrace">{stack_trace}</div>
+
+            <p>Veuillez consulter les logs en pièce jointe pour plus de détails.</p>
+        </div>
+        <div class="footer">
+            <p>Email généré automatiquement par le système de veille</p>
+        </div>
+    </div>
+</body>
+</html>
