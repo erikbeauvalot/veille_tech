@@ -184,11 +184,21 @@ class VeilleTechOrchestrator:
             # Check if there are any articles to send
             if len(articles) == 0:
                 self.error_handler.log_info(
-                    "No new articles found. Skipping email and updating last execution timestamp.",
+                    "No new articles found. Skipping email.",
                     "ORCHESTRATOR",
                 )
-                # Still update last execution time even if no articles
-                self.config_manager.update_last_execution()
+                # Update last execution time only if not in dry-run mode
+                if not self.dry_run:
+                    self.config_manager.update_last_execution()
+                    self.error_handler.log_info(
+                        "Updated last execution timestamp",
+                        "ORCHESTRATOR",
+                    )
+                else:
+                    self.error_handler.log_info(
+                        "DRY RUN MODE - Not updating last execution timestamp",
+                        "ORCHESTRATOR",
+                    )
                 language_preference = self.config_manager.get_language_preference()
                 translation_provider = self.config_manager.get_translation_provider()
                 translation_model = self.config_manager.get_model_for_provider(translation_provider)
@@ -272,12 +282,18 @@ class VeilleTechOrchestrator:
                     "ORCHESTRATOR",
                 )
 
-            # Step 10: Update last execution time
-            self.config_manager.update_last_execution()
-            self.error_handler.log_info(
-                "Updated last execution timestamp",
-                "ORCHESTRATOR",
-            )
+            # Step 10: Update last execution time (skip in dry-run mode)
+            if not self.dry_run:
+                self.config_manager.update_last_execution()
+                self.error_handler.log_info(
+                    "Updated last execution timestamp",
+                    "ORCHESTRATOR",
+                )
+            else:
+                self.error_handler.log_info(
+                    "DRY RUN MODE - Not updating last execution timestamp",
+                    "ORCHESTRATOR",
+                )
 
             # Success
             self.error_handler.log_info("Execution completed successfully", "ORCHESTRATOR")
