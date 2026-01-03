@@ -1,5 +1,7 @@
 # Configuration and credentials
 config.json
+config_test.json
+config*.json
 .env
 
 # Logs
@@ -46,6 +48,7 @@ env/
 
 # Output files
 newsletter_output.html
+veille_tech_output.json
 
 # OS
 .DS_Store
