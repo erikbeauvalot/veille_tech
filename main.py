@@ -52,6 +52,7 @@ class VeilleTechOrchestrator:
         self.error_handler = ErrorHandler(console_level=log_level)
         self.dry_run = False
         self.force = False
+        self.execution_start_time = None  # Track for execution time calculation
 
     def run(self, dry_run: bool = False, force: bool = False, days_ago: Optional[str] = None) -> Dict[str, Any]:
         """
@@ -66,7 +67,7 @@ class VeilleTechOrchestrator:
             Execution result dictionary
         """
         # Track execution start time
-        execution_start_time = datetime.now()
+        self.execution_start_time = datetime.now()
 
         self.dry_run = dry_run
         self.force = force
@@ -202,10 +203,12 @@ class VeilleTechOrchestrator:
                 language_preference = self.config_manager.get_language_preference()
                 translation_provider = self.config_manager.get_translation_provider()
                 translation_model = self.config_manager.get_model_for_provider(translation_provider)
+                execution_time = (datetime.now() - self.execution_start_time).total_seconds()
                 return {
                     "status": "success",
                     "message": "No new articles found - email not sent",
-                    "execution_date": execution_start_time.isoformat(),
+                    "execution_date": self.execution_start_time.isoformat(),
+                    "execution_time": execution_time,
                     "articles_count": 0,
                     "categories_count": 0,
                     "language": language_preference,
@@ -298,10 +301,12 @@ class VeilleTechOrchestrator:
             # Success
             self.error_handler.log_info("Execution completed successfully", "ORCHESTRATOR")
 
+            execution_time = (datetime.now() - self.execution_start_time).total_seconds()
             return {
                 "status": "success",
                 "message": "Veille tech execution completed successfully",
-                "execution_date": execution_start_time.isoformat(),
+                "execution_date": self.execution_start_time.isoformat(),
+                "execution_time": execution_time,
                 "articles_count": len(articles),
                 "categories_count": len(grouped_articles),
                 "language": language_preference,
@@ -369,10 +374,12 @@ class VeilleTechOrchestrator:
                     "ORCHESTRATOR",
                 )
 
+        execution_time = (datetime.now() - self.execution_start_time).total_seconds() if self.execution_start_time else 0
         return {
             "status": "error",
             "message": error_message,
-            "execution_date": datetime.now().isoformat(),
+            "execution_date": self.execution_start_time.isoformat() if self.execution_start_time else datetime.now().isoformat(),
+            "execution_time": execution_time,
             "articles_count": 0,
             "categories_count": 0,
             "agent": agent,
@@ -446,6 +453,7 @@ def main():
         json_output = {
             "metadata": {
                 "execution_date": result.get("execution_date", datetime.now().isoformat()),
+                "execution_time": result.get("execution_time", 0),
                 "status": result["status"],
                 "message": result["message"],
                 "articles_count": result.get("articles_count", 0),
