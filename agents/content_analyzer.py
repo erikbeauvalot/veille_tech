@@ -105,6 +105,23 @@ class ContentAnalyzer:
 
         return grouped
 
+    def generate_category_summaries(self, grouped_articles: Dict[str, List[Dict[str, Any]]]) -> Dict[str, str]:
+        """
+        Generate executive summaries for all categories.
+
+        Args:
+            grouped_articles: Articles grouped by category
+
+        Returns:
+            Dict mapping category name to summary text
+        """
+        summaries = {}
+        for category, articles in grouped_articles.items():
+            summary = self._generate_category_summary(articles)
+            if summary:
+                summaries[category] = summary
+        return summaries
+
     def generate_html(self, grouped_articles: Dict[str, List[Dict[str, Any]]]) -> str:
         """
         Generate HTML summary from grouped articles.

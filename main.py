@@ -6,6 +6,7 @@ Coordinates all agents to fetch, analyze, and send tech news.
 
 import sys
 import time
+import json
 import argparse
 from datetime import datetime, timedelta
 from typing import Dict, Any, Optional
@@ -64,6 +65,9 @@ class VeilleTechOrchestrator:
         Returns:
             Execution result dictionary
         """
+        # Track execution start time
+        execution_start_time = datetime.now()
+
         self.dry_run = dry_run
         self.force = force
 
@@ -185,11 +189,20 @@ class VeilleTechOrchestrator:
                 )
                 # Still update last execution time even if no articles
                 self.config_manager.update_last_execution()
+                language_preference = self.config_manager.get_language_preference()
+                translation_provider = self.config_manager.get_translation_provider()
+                translation_model = self.config_manager.get_model_for_provider(translation_provider)
                 return {
                     "status": "success",
                     "message": "No new articles found - email not sent",
+                    "execution_date": execution_start_time.isoformat(),
                     "articles_count": 0,
                     "categories_count": 0,
+                    "language": language_preference,
+                    "translation_provider": translation_provider,
+                    "translation_model": translation_model,
+                    "grouped_articles": {},
+                    "exec_summaries": {},
                     "dry_run": self.dry_run,
                 }
 
@@ -209,6 +222,10 @@ class VeilleTechOrchestrator:
                 return self._handle_fatal_error("CONTENT_ANALYZER", analysis_result["message"])
 
             grouped_articles = analysis_result["grouped_articles"]
+
+            # Step 6.5: Generate category summaries (before HTML generation)
+            self.error_handler.log_info("Generating category summaries...", "ORCHESTRATOR")
+            category_summaries = content_analyzer.generate_category_summaries(grouped_articles)
 
             # Step 7: Generate HTML
             self.error_handler.log_info("Generating HTML content...", "ORCHESTRATOR")
@@ -268,8 +285,14 @@ class VeilleTechOrchestrator:
             return {
                 "status": "success",
                 "message": "Veille tech execution completed successfully",
+                "execution_date": execution_start_time.isoformat(),
                 "articles_count": len(articles),
                 "categories_count": len(grouped_articles),
+                "language": language_preference,
+                "translation_provider": translation_provider,
+                "translation_model": translation_model,
+                "grouped_articles": grouped_articles,
+                "exec_summaries": category_summaries,
                 "dry_run": self.dry_run,
             }
 
@@ -333,6 +356,9 @@ class VeilleTechOrchestrator:
         return {
             "status": "error",
             "message": error_message,
+            "execution_date": datetime.now().isoformat(),
+            "articles_count": 0,
+            "categories_count": 0,
             "agent": agent,
             "log_file": self.error_handler.get_log_file_path(),
         }
@@ -374,6 +400,11 @@ def main():
         metavar="N",
         help="Filter articles from last N days (ignores last_execution)",
     )
+    parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Output results as JSON instead of plain text",
+    )
 
     args = parser.parse_args()
 
@@ -393,16 +424,47 @@ def main():
     orchestrator = VeilleTechOrchestrator(config_path=args.config, log_level=log_level)
     result = orchestrator.run(dry_run=args.dry_run, force=args.force, days_ago=days_ago)
 
-    # Print result
-    print("\n" + "=" * 50)
-    print(f"Status: {result['status']}")
-    print(f"Message: {result['message']}")
-    if result["status"] == "success":
-        print(f"Articles: {result.get('articles_count', 0)}")
-        print(f"Categories: {result.get('categories_count', 0)}")
-    if result["status"] == "error":
-        print(f"Log file: {result.get('log_file', 'N/A')}")
-    print("=" * 50 + "\n")
+    # Output results
+    if args.json:
+        # JSON output mode
+        json_output = {
+            "metadata": {
+                "execution_date": result.get("execution_date", datetime.now().isoformat()),
+                "status": result["status"],
+                "message": result["message"],
+                "articles_count": result.get("articles_count", 0),
+                "categories_count": result.get("categories_count", 0),
+                "language": result.get("language", "N/A"),
+                "translation_provider": result.get("translation_provider", "N/A"),
+                "translation_model": result.get("translation_model", "N/A"),
+            },
+            "exec_summary": result.get("exec_summaries", {}),
+            "details": result.get("grouped_articles", {})
+        }
+
+        # Output to stdout
+        json_str = json.dumps(json_output, indent=2, ensure_ascii=False)
+        print(json_str)
+
+        # Save to file
+        output_file = "veille_tech_output.json"
+        try:
+            with open(output_file, "w", encoding="utf-8") as f:
+                f.write(json_str)
+            print(f"\n✓ JSON output saved to {output_file}", file=sys.stderr)
+        except Exception as e:
+            print(f"\n✗ Failed to save JSON to {output_file}: {str(e)}", file=sys.stderr)
+    else:
+        # Original text output mode
+        print("\n" + "=" * 50)
+        print(f"Status: {result['status']}")
+        print(f"Message: {result['message']}")
+        if result["status"] == "success":
+            print(f"Articles: {result.get('articles_count', 0)}")
+            print(f"Categories: {result.get('categories_count', 0)}")
+        if result["status"] == "error":
+            print(f"Log file: {result.get('log_file', 'N/A')}")
+        print("=" * 50 + "\n")
 
     # Exit with appropriate code
     sys.exit(0 if result["status"] == "success" else 1)

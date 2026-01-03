@@ -44,12 +44,20 @@ python main.py --days 30 --dry-run  # Last 30 days, test mode
 # Custom log level
 python main.py --log-level DEBUG
 
+# JSON output (stdout + file: veille_tech_output.json)
+python main.py --json --dry-run
+
 # Combine options
 python main.py --days 14 --dry-run --verbose
+python main.py --json --days 7 --dry-run --verbose
 
 # Using launch scripts (activates venv automatically)
 ./run.sh --dry-run          # macOS/Linux
 run.bat --dry-run           # Windows
+
+# Testing with test configuration (recommended for development)
+python main.py --config config_test.json --days 1 --dry-run
+python main.py --config config_test.json --days 1 --json --dry-run
 ```
 
 ## Architecture Overview
@@ -279,6 +287,40 @@ The newsletter now uses an executive-friendly format:
 if self.logger:
     self.logger.debug(f"[AGENT_NAME] Doing something with {variable}")
 ```
+
+### Testing with config_test.json
+
+For all testing phases, use the test configuration file with `--days 1` to limit scope:
+
+```bash
+# Standard test (text output)
+python main.py --config config_test.json --days 1 --dry-run
+
+# Test with verbose logging
+python main.py --config config_test.json --days 1 --dry-run --verbose
+
+# Test JSON output (stdout + file)
+python main.py --config config_test.json --days 1 --json --dry-run
+
+# Test with specific log level
+python main.py --config config_test.json --days 1 --log-level DEBUG --dry-run
+
+# Quick feature test (ignore date filter, use test config)
+python main.py --config config_test.json --force --dry-run --verbose
+```
+
+**Benefits of this approach:**
+- `config_test.json`: Isolated test configuration (won't affect production config)
+- `--days 1`: Only fetches articles from the last 24 hours (fast testing)
+- `--dry-run`: Doesn't send email or modify state
+- Predictable, repeatable test results
+
+**Test checklist:**
+- [ ] Run with `--verbose` to see all DEBUG logs
+- [ ] Check generated files: `newsletter_output.html`, `veille_tech_output.json` (if --json)
+- [ ] Check logs: `logs/veille_tech.log`
+- [ ] Verify metadata and counts match expected values
+- [ ] Review article details and translations (if applicable)
 
 ## Critical Code Locations
 

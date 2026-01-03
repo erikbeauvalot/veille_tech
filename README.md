@@ -4,11 +4,12 @@ Système automatisé de surveillance technologique qui récupère quotidiennemen
 
 ## 🎯 Fonctionnalités
 
-- ✅ Récupération multi-sources RSS (AI, Cybersecurity, Cloud, Tech, Banque, Actualité Aérienne)
+- ✅ Récupération multi-sources RSS (AI, Cybersecurity, Cloud, Tech, Banque, Actualité Aérienne, Dietetique, Société Générale)
 - ✅ **Découverte automatique de nouveaux flux RSS** à chaque exécution
 - ✅ **Traduction automatique des résumés en français** via Claude ou OpenAI
 - ✅ **Résumés automatiques par catégorie** avant la liste détaillée des articles
 - ✅ **Heure d'exécution dans le sujet du mail** (ex: "📰 Veille Technologique - 02 January 2026 à 10:31")
+- ✅ **JSON output** : Export structuré en JSON (stdout + fichier `veille_tech_output.json`)
 - ✅ Génération HTML responsive et professionnelle
 - ✅ **Système de templates séparé** pour faciliter la maintenance
 - ✅ Envoi automatique par email via SMTP (Gmail, etc.)
@@ -16,6 +17,7 @@ Système automatisé de surveillance technologique qui récupère quotidiennemen
 - ✅ Filtrage par date d'exécution
 - ✅ Gestion robuste des erreurs et logging détaillé
 - ✅ Mode dry-run pour tester sans envoyer d'email
+- ✅ **Mode test avec config_test.json et --days 1** pour développement rapide
 - ✅ Notifications d'erreur automatiques
 - ✅ Architecture modulaire avec 7 agents séparés
 
@@ -399,7 +401,33 @@ deactivate  # Quitter l'environnement quand fini
   - Exemple: `python main.py --days 30 --dry-run` (derniers 30 jours, sans envoyer)
 - **Configuration personnalisée** : `python main.py --config /chemin/vers/config.json`
 - **Logging verbose** : `python main.py --verbose` ou `python main.py --log-level DEBUG` - Affiche plus de détails
-- **Combiner les options** : `python main.py --force --dry-run --config custom_config.json`
+- **JSON output** : `python main.py --json --dry-run` - Génère sortie JSON sur stdout + fichier `veille_tech_output.json`
+- **Test configuration** : `python main.py --config config_test.json --days 1 --dry-run` - Utilise la config de test (recommandé pour développement)
+- **Combiner les options** : `python main.py --force --dry-run --config custom_config.json` ou `python main.py --json --days 7 --dry-run --verbose`
+
+### 🧪 Mode test (développement)
+
+Pour tester les changements rapidement avec scope limité :
+
+```bash
+# Test standard avec config_test.json
+python main.py --config config_test.json --days 1 --dry-run
+
+# Test avec JSON output
+python main.py --config config_test.json --days 1 --json --dry-run
+
+# Test avec verbose logging
+python main.py --config config_test.json --days 1 --dry-run --verbose
+
+# Test sans limites (tous les articles)
+python main.py --config config_test.json --force --dry-run --verbose
+```
+
+**Avantages :**
+- `config_test.json` : Configuration isolée, ne modifie pas la config de production
+- `--days 1` : Récupère uniquement les articles du dernier jour (rapide)
+- `--dry-run` : N'envoie pas d'email, ne modifie pas l'état
+- Résultats reproductibles et prévisibles
 
 ### Logique d'envoi
 

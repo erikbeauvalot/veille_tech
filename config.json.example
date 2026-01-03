@@ -34,6 +34,14 @@
     "Actualité Aérienne": {
       "description": "Aviation, Aerospace, Airlines, Aeronautical News",
       "keywords": ["aviation", "aéronautique", "airline", "aéroport", "avion", "hélicoptère", "aerospace", "vol", "aviation civile"]
+    },
+    "Dietetique": {
+      "description": "Nutrition, Alimentation, Santé et Bien-être",
+      "keywords": ["nutrition", "diététique", "alimentation", "régime", "santé", "bien-être", "macronutriments", "protéines", "glucides", "lipides", "vitamines", "minéraux", "équilibre alimentaire", "mode de vie sain", "calories", "perte de poids", "prise de masse", "nutrition sportive", "alimentation équilibrée", "nutritionniste", "diététicien", "habitudes alimentaires", "super aliments", "antioxydants"]
+    },
+    "Société Générale": {
+      "description": "Actualités de Société Générale, Banque, Finance et Groupe SG",
+      "keywords": ["Société Générale", "SG", "groupe SG", "banque SG", "actualité Société Générale", "résultats Société Générale", "stratégie SG", "action Société Générale", "dividende Société Générale", "emplois Société Générale", "innovation bancaire SG", "banque de détail", "banque d'affaires", "gestion de patrimoine", "assurance SG", "Généali", "services financiers", "bourse SG", "cotation SG", "direction Société Générale", "filiales SG", "international SG", "numérique SG", "transformation digitale"]
     }
   },
   "rss_feeds": [
