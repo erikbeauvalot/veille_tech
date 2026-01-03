@@ -450,13 +450,13 @@ crontab -e
 Ajouter une ligne pour exécuter quotidiennement à 9h (utilise le script qui gère l'activation du venv) :
 
 ```cron
-0 9 * * * cd /Users/erik/Documents/Dev/AI/Claude/veille_tech && ./run.sh >> logs/cron.log 2>&1
+0 9 * * * cd /veille_tech && ./run.sh >> logs/cron.log 2>&1
 ```
 
 Ou si vous préférez contrôler l'activation manuellement :
 
 ```cron
-0 9 * * * cd /Users/erik/Documents/Dev/AI/Claude/veille_tech && source venv/bin/activate && python main.py >> logs/cron.log 2>&1
+0 9 * * * cd /veille_tech && source venv/bin/activate && python main.py >> logs/cron.log 2>&1
 ```
 
 ### Sur Windows (Planificateur de tâches)
@@ -478,7 +478,7 @@ Structure complète :
 ```json
 {
   "email": {
-    "recipient": "erik@beauvalot.com",
+    "recipient": "votre_email@gmail.com",
     "smtp_server": "smtp.gmail.com",
     "smtp_port": 587,
     "sender_email": "votre_email@gmail.com",
